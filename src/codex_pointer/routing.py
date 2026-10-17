@@ -13,6 +13,8 @@ import ntpath
 from typing import Any
 from uuid import UUID
 
+from .i18n import tr
+
 
 MAX_ROUTES = 100
 MAX_RECENT_TARGETS = 8
@@ -143,9 +145,9 @@ def remember_binding(settings: dict, target: Any, thread_id: str, title: str = "
     """
     key, identifier = route_key(target), _thread_id(thread_id)
     if not key:
-        raise ValueError("这个目标没有可稳定记住的文件夹或软件路径。")
+        raise ValueError(tr("这个目标没有可稳定记住的文件夹或软件路径。"))
     if not identifier:
-        raise ValueError("对话 ID 必须是有效的 UUID。")
+        raise ValueError(tr("对话 ID 必须是有效的 UUID。"))
     value = {"thread_id": identifier, "thread_title": _text(title, _MAX_TITLE) or identifier,
              "mode": "existing"}
     _save_route(settings, key, value)
@@ -155,7 +157,7 @@ def remember_binding(settings: dict, target: Any, thread_id: str, title: str = "
 def remember_mode(settings: dict, target: Any, mode: str) -> None:
     """Remember a mode without fabricating a chat binding."""
     if mode not in ("new", "existing"):
-        raise ValueError("对话模式必须是 new 或 existing。")
+        raise ValueError(tr("对话模式必须是 new 或 existing。"))
     key = route_key(target)
     if not key:
         return

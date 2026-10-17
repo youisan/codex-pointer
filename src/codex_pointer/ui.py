@@ -44,6 +44,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .i18n import tr
+
 
 @dataclass(frozen=True)
 class Theme:
@@ -250,7 +252,10 @@ class FloatingButton(QWidget):
         self.setAcceptDrops(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setAccessibleName("Codex Pointer")
-        self._default_tooltip = "单击打开或收起；拖动选择窗口，或把文件拖到圆圈上"
+        self._default_tooltip_key = "单击打开或收起；拖动选择窗口，或把文件拖到圆圈上"
+        self._default_tooltip = tr(self._default_tooltip_key)
+        self._drop_note_key = None
+        self._drop_note_point = None
         self.setToolTip(self._default_tooltip)
         self._theme = theme
         self._reduced_motion = reduced_motion
@@ -277,6 +282,18 @@ class FloatingButton(QWidget):
         self._drop_note_timer = QTimer(self)
         self._drop_note_timer.setSingleShot(True)
         self._drop_note_timer.timeout.connect(self._restore_drop_tooltip)
+
+    def retranslate_ui(self) -> None:
+        """Refresh chrome without changing drag, busy or target state."""
+        self.setAccessibleName("Codex Pointer")
+        self.setWindowTitle("Codex Pointer")
+        self._default_tooltip = tr(self._default_tooltip_key)
+        note = tr(self._drop_note_key) if self._drop_note_key else self._default_tooltip
+        self.setToolTip(note)
+        if self._drop_note_key and QToolTip.isVisible() and self._drop_note_point is not None:
+            QToolTip.showText(self._drop_note_point, note, self, self.rect(),
+                              max(100, self._drop_note_timer.remainingTime()))
+        self.update()
 
     def get_visual_scale(self) -> float:
         return self._scale
@@ -362,13 +379,17 @@ class FloatingButton(QWidget):
         super().leaveEvent(event)
 
     def _restore_drop_tooltip(self) -> None:
+        self._drop_note_key = None
         self.setToolTip(self._default_tooltip)
 
     def _drop_note(self, text: str, event=None) -> None:
-        self.setToolTip(text)
+        self._drop_note_key = text
+        translated = tr(text)
+        self.setToolTip(translated)
         point = (self.mapToGlobal(event.position().toPoint()) if event is not None
                  else self.mapToGlobal(self.rect().center()))
-        QToolTip.showText(point, text, self, self.rect(), 1800)
+        self._drop_note_point = point
+        QToolTip.showText(point, translated, self, self.rect(), 1800)
         self._drop_note_timer.start(1800)
 
     def _set_file_drag(self, active: bool) -> None:
@@ -596,6 +617,9 @@ class Popover(QWidget):
             animation.setEasingCurve(QEasingCurve.Type.OutCubic)
             self._animation.addAnimation(animation)
         self.set_theme(theme)
+
+    def retranslate_ui(self) -> None:
+        self.setWindowTitle("Codex Pointer")
 
     @property
     def reduced_motion(self) -> bool:

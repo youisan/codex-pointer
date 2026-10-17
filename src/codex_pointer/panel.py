@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from .ui import Popover, Theme, icon
 from .quick_tasks import insertion_for, tasks_for
+from .i18n import tr
 
 
 class _ElidingLabel(QLabel):
@@ -56,8 +57,9 @@ class TaskPanel(Popover):
 
     def __init__(self, controller) -> None:
         self.controller = controller
+        self._notice_key, self._notice_kwargs = "", {}
         super().__init__(controller.theme, controller.reduced_motion)
-        self.setAccessibleName("Codex Pointer 任务面板")
+        self.setAccessibleName(tr("Codex Pointer 任务面板"))
         self.body.setSpacing(14)
 
         header = QHBoxLayout()
@@ -226,6 +228,29 @@ class TaskPanel(Popover):
         self.set_theme(controller.theme)
         self.refresh_target()
         self.set_mode(controller.mode)
+        self.retranslate_ui()
+
+    def retranslate_ui(self) -> None:
+        """Translate chrome in place, leaving drafts, selection and state intact."""
+        super().retranslate_ui()
+        if not hasattr(self, "primary"):
+            return
+        self.setAccessibleName(tr("Codex Pointer 任务面板"))
+        for button in (self.theme_button, self.close_button, self.change_target, self.more_button):
+            text = tr(button.property("translation_key"))
+            button.setAccessibleName(text)
+            button.setToolTip(text)
+        self.new_button.setText(tr("新对话"))
+        self.existing_button.setText(tr("继续对话"))
+        self.editor.setPlaceholderText(tr("想让 Codex 做什么？"))
+        self.editor.setAccessibleName(tr("任务内容"))
+        self.include_image.setText(tr("附带截图"))
+        self.preview_button.setText(tr("预览"))
+        self.preview_button.setToolTip(tr("预览目标窗口截图"))
+        self.notice.setAccessibleName(tr("任务状态"))
+        self.notice.setText(tr(self._notice_key, **self._notice_kwargs))
+        self.refresh_target()
+        self._fit_content()
 
     @staticmethod
     def _icon_button(description: str) -> QToolButton:
@@ -233,8 +258,9 @@ class TaskPanel(Popover):
         button.setObjectName("ghost")
         button.setFixedSize(30, 30)
         button.setIconSize(QSize(18, 18))
-        button.setAccessibleName(description)
-        button.setToolTip(description)
+        button.setProperty("translation_key", description)
+        button.setAccessibleName(tr(description))
+        button.setToolTip(tr(description))
         button.setCursor(Qt.CursorShape.PointingHandCursor)
         return button
 
@@ -290,8 +316,8 @@ class TaskPanel(Popover):
             task = tasks[index] if index < len(tasks) else None
             button.setVisible(task is not None)
             button.setText(task.label if task else "")
-            button.setAccessibleName("快捷任务：" + task.label if task else "快捷任务")
-            button.setToolTip(task.prompt + "\n添加到任务末尾，不会自动发送" if task else "")
+            button.setAccessibleName(tr("快捷任务：{label}", label=task.label) if task else tr("快捷任务"))
+            button.setToolTip(task.prompt + "\n" + tr("添加到任务末尾，不会自动发送") if task else "")
         if was_visible != bool(tasks):
             self._fit_content()
 
@@ -327,14 +353,14 @@ class TaskPanel(Popover):
     def refresh_target(self) -> None:
         target = self.controller.target
         if target is None:
-            name, detail = (("正在识别目标…", "可以继续输入任务，或选择其他对象") if self.controller.selecting
-                            else ("选择操作对象", "拖动悬浮按钮，或选择文件夹"))
+            name, detail = ((tr("正在识别目标…"), tr("可以继续输入任务，或选择其他对象")) if self.controller.selecting
+                            else (tr("选择操作对象"), tr("拖动悬浮按钮，或选择文件夹")))
             glyph = "folder"
         else:
             path = str(target.path or "")
             name = str((PureWindowsPath(path).name if path and target.kind in ("folder", "file") else "")
-                       or target.title or target.process_name or "目标窗口")
-            detail = path or str(target.process_path or target.process_name or "目标窗口")
+                       or target.title or target.process_name or tr("目标窗口"))
+            detail = path or str(target.process_path or target.process_name or tr("目标窗口"))
             glyph = "folder" if target.kind == "folder" else "file" if target.kind == "file" else "window"
         self.target_title.set_full_text(name)
         self.target_path.set_full_text(detail)
@@ -345,7 +371,7 @@ class TaskPanel(Popover):
             self.include_image.setChecked(False)
         self.include_image.setEnabled(can_capture and not self.controller.busy)
         self.preview_button.setEnabled(can_capture and not self.controller.busy)
-        self.include_image.setToolTip("仅在勾选后截取目标窗口" if can_capture else "文件夹无需截图")
+        self.include_image.setToolTip(tr("仅在勾选后截取目标窗口") if can_capture else tr("文件夹无需截图"))
         self._refresh_quick_tasks()
         self.refresh_primary()
 
@@ -355,21 +381,21 @@ class TaskPanel(Popover):
         existing = self.controller.mode == "existing"
         thread_id = self.controller.settings.get("thread_id", "")
         missing_binding = existing and not thread_id
-        title = self.controller.settings.get("thread_title") or thread_id or "尚未选择对话"
+        title = self.controller.settings.get("thread_title") or thread_id or tr("尚未选择对话")
         self.bound_title.set_full_text(str(title))
-        self.bind_button.setText("更换" if thread_id else "选择对话")
+        self.bind_button.setText(tr("更换") if thread_id else tr("选择对话"))
         if missing_binding:
-            text = "选择对话"
-            hint = "选择后将任务发送到该对话"
+            text = tr("选择对话")
+            hint = tr("选择后将任务发送到该对话")
         elif existing:
-            text = "发送到此对话"
-            hint = "任务将排队发送到已绑定对话"
+            text = tr("发送到此对话")
+            hint = tr("任务将排队发送到已绑定对话")
         else:
-            text = "在 Codex 中继续"
-            hint = "将在 Codex 中预填，确认后发送"
+            text = tr("在 Codex 中继续")
+            hint = tr("将在 Codex 中预填，确认后发送")
         ready = bool(self.controller.target and self.editor.toPlainText().strip())
         enabled = not busy and not selecting and (missing_binding or ready)
-        self.primary.setText("正在连接…" if busy else "正在识别…" if selecting else text)
+        self.primary.setText(tr("正在连接…") if busy else tr("正在识别…") if selecting else text)
         self.primary.setEnabled(enabled)
         self.primary.setIcon(icon("arrow-right", self._theme.primary_text if enabled else self._theme.subtle))
         self.primary.setToolTip("Ctrl + Enter")
@@ -392,8 +418,9 @@ class TaskPanel(Popover):
         if self.primary.isEnabled():
             self.primary.click()
 
-    def show_notice(self, text: str) -> None:
-        self.notice.setText(str(text))
+    def show_notice(self, text: str, **kwargs) -> None:
+        self._notice_key, self._notice_kwargs = str(text), kwargs
+        self.notice.setText(tr(self._notice_key, **self._notice_kwargs))
         self.notice.setVisible(bool(text))
         self._fit_content()
 

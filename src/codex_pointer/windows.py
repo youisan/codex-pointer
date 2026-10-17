@@ -20,6 +20,7 @@ from threading import Lock, Thread
 import zlib
 
 from .explorer_worker import ExplorerWorker, ExplorerWorkerError, ExplorerWorkerTimeout, validate_windows_path
+from .i18n import tr
 
 
 class WindowsCaptureError(RuntimeError):
@@ -301,7 +302,7 @@ def target_from_path(path: str) -> TargetContext:
         if not isinstance(data, dict):
             raise ValueError("Invalid path metadata.")
         if data.get("error"):
-            raise WindowsCaptureError("未能选择这个文件或文件夹：它可能已移动、无法访问，或不是普通文件。")
+            raise WindowsCaptureError(tr("未能选择这个文件或文件夹：它可能已移动、无法访问，或不是普通文件。"))
         resolved, kind = data.get("path"), data.get("kind")
         if (not isinstance(resolved, str) or not resolved or kind not in ("folder", "file")
                 or data.get("source") != "file-drop"):
@@ -310,11 +311,11 @@ def target_from_path(path: str) -> TargetContext:
         return TargetContext(kind=kind, title=PureWindowsPath(resolved).name or resolved,
                              path=resolved, source="file-drop")
     except ExplorerWorkerTimeout as error:
-        raise WindowsCaptureError("文件或文件夹检查超时，共享目录可能暂时无法连接。请稍后重试。") from error
+        raise WindowsCaptureError(tr("文件或文件夹检查超时，共享目录可能暂时无法连接。请稍后重试。")) from error
     except (ExplorerWorkerError, OSError) as error:
-        raise WindowsCaptureError("未能检查这个文件或文件夹，请重新拖入或稍后重试。") from error
+        raise WindowsCaptureError(tr("未能检查这个文件或文件夹，请重新拖入或稍后重试。")) from error
     except (TypeError, ValueError) as error:
-        raise WindowsCaptureError("这个文件地址无效，请拖入本地文件或文件夹。") from error
+        raise WindowsCaptureError(tr("这个文件地址无效，请拖入本地文件或文件夹。")) from error
 
 
 def close_capture_helpers() -> None:

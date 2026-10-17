@@ -16,7 +16,8 @@
       download: "Download for Windows",
       github: "View on GitHub",
       heroCaption: "Windows preview · Free and open source",
-      nativeLanguage: "Website demo: EN / 中文. Desktop interface: Chinese.",
+      nativeLanguage:
+        "Desktop language follows Codex: English / Simplified Chinese; other languages use English.",
       demoLabel: "Interactive product preview",
       demoTabs: "Example target",
       folder: "Folder",
@@ -42,7 +43,7 @@
       selectTarget: "Select a target",
       openPanel: "Open panel",
       demoNote:
-        "Website demo: EN / 中文. Desktop UI: Chinese. Nothing is captured or sent.",
+        "Website preview only. The desktop interface follows Codex's language. Nothing is captured or sent.",
       howHeading: "A shorter path to the conversation.",
       howIntro: "Keep your focus. Let the context come with you.",
       stepOneTitle: "Point to your target",
@@ -136,7 +137,8 @@
       download: "下载 Windows 版",
       github: "查看 GitHub",
       heroCaption: "Windows 预览版 · 免费开源",
-      nativeLanguage: "网页演示支持 EN / 中文，桌面界面当前为中文。",
+      nativeLanguage:
+        "桌面跟随 Codex 的 English / 简体中文设置，其他语言使用英文。",
       demoLabel: "产品交互演示",
       demoTabs: "示例对象",
       folder: "文件夹",
@@ -161,7 +163,8 @@
       sendToChat: "发送到已绑定对话",
       selectTarget: "切换对象",
       openPanel: "展开面板",
-      demoNote: "网页演示：EN / 中文；桌面界面：中文。不采集内容或发送任务。",
+      demoNote:
+        "仅为网页演示。桌面界面跟随 Codex 语言；此处不采集内容或发送任务。",
       howHeading: "让眼前的内容，更快进入对话。",
       howIntro: "专注手头的事，把上下文交给小按钮。",
       stepOneTitle: "指向你要处理的对象",

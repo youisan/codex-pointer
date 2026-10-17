@@ -21,6 +21,7 @@ from typing import Any
 from urllib.parse import urlencode, quote
 
 from . import __version__
+from .i18n import tr
 
 
 class BridgeError(RuntimeError):
@@ -53,11 +54,11 @@ class DispatchResult:
 def _native_executable(value: str | os.PathLike[str]) -> str:
     candidate = Path(value).expanduser()
     if candidate.suffix.lower() in {".cmd", ".bat", ".ps1"}:
-        raise BridgeUnavailable("请指定原生 codex.exe，不能使用 .cmd/.bat/PowerShell 包装脚本。")
+        raise BridgeUnavailable(tr("请指定原生 codex.exe，不能使用 .cmd/.bat/PowerShell 包装脚本。"))
     if not candidate.is_file():
-        raise BridgeUnavailable(f"找不到 Codex 可执行文件：{candidate}")
+        raise BridgeUnavailable(tr("找不到 Codex 可执行文件：{candidate}", candidate=candidate))
     if os.name == "nt" and candidate.suffix.lower() != ".exe":
-        raise BridgeUnavailable("Windows 上需要原生 codex.exe。")
+        raise BridgeUnavailable(tr("Windows 上需要原生 codex.exe。"))
     return str(candidate.resolve())
 
 
@@ -86,7 +87,7 @@ def discover_codex(executable: str | os.PathLike[str] | None = None) -> str:
             return _native_executable(candidate)
         except BridgeUnavailable:
             continue
-    raise BridgeUnavailable("未找到原生 Codex CLI。请安装 Codex，或设置 CODEX_POINTER_CODEX 为 codex.exe 的完整路径。")
+    raise BridgeUnavailable(tr("未找到原生 Codex CLI。请安装 Codex，或设置 CODEX_POINTER_CODEX 为 codex.exe 的完整路径。"))
 
 
 def _process_options() -> dict[str, Any]:
@@ -142,10 +143,10 @@ class _RpcConnection:
             while not self.closed.is_set():
                 line = self.process.stdout.readline(self._MAX_LINE + 1)
                 if not line:
-                    self._enqueue(BridgeUnavailable("Codex app-server 已断开；没有确认操作成功。"))
+                    self._enqueue(BridgeUnavailable(tr("Codex app-server 已断开；没有确认操作成功。")))
                     return
                 if len(line) > self._MAX_LINE:
-                    self._enqueue(BridgeError("Codex app-server 响应超过大小限制。"))
+                    self._enqueue(BridgeError(tr("Codex app-server 响应超过大小限制。")))
                     return
                 if line.strip():
                     message = json.loads(line)
@@ -153,7 +154,7 @@ class _RpcConnection:
                         raise ValueError("RPC response must be an object")
                     self._enqueue(message)
         except (OSError, ValueError, UnicodeError):
-            self._enqueue(BridgeError("Codex app-server 返回了无效的 UTF-8 JSON 响应。"))
+            self._enqueue(BridgeError(tr("Codex app-server 返回了无效的 UTF-8 JSON 响应。")))
 
     def _write(self, message: dict[str, Any]) -> None:
         assert self.process is not None and self.process.stdin is not None
@@ -161,7 +162,7 @@ class _RpcConnection:
             self.process.stdin.write(json.dumps(message, ensure_ascii=False) + "\n")
             self.process.stdin.flush()
         except (OSError, ValueError) as exc:
-            raise BridgeUnavailable("无法写入 Codex app-server；没有确认操作成功。") from exc
+            raise BridgeUnavailable(tr("无法写入 Codex app-server；没有确认操作成功。")) from exc
 
     def request(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
         request_id = self.next_id
@@ -171,11 +172,11 @@ class _RpcConnection:
         while True:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                raise BridgeTimeout(f"Codex {method} 超时；若正在发送，请先检查 Codex，避免重复提交。")
+                raise BridgeTimeout(tr("Codex {method} 超时；若正在发送，请先检查 Codex，避免重复提交。", method=method))
             try:
                 message = self.messages.get(timeout=remaining)
             except queue.Empty as exc:
-                raise BridgeTimeout(f"Codex {method} 超时；若正在发送，请先检查 Codex，避免重复提交。") from exc
+                raise BridgeTimeout(tr("Codex {method} 超时；若正在发送，请先检查 Codex，避免重复提交。", method=method)) from exc
             if isinstance(message, Exception):
                 raise message
             if "method" in message:
@@ -190,10 +191,10 @@ class _RpcConnection:
                 error = message["error"]
                 code = error.get("code", "unknown") if isinstance(error, dict) else "unknown"
                 # Deliberately exclude server text: it may echo a private prompt.
-                raise BridgeError(f"Codex {method} 被拒绝（错误码 {code}）；请在 Codex 查看详情。")
+                raise BridgeError(tr("Codex {method} 被拒绝（错误码 {code}）；请在 Codex 查看详情。", method=method, code=code))
             result = message.get("result")
             if not isinstance(result, dict):
-                raise BridgeError(f"Codex {method} 响应缺少有效 result。")
+                raise BridgeError(tr("Codex {method} 响应缺少有效 result。", method=method))
             return result
 
     def close(self) -> None:
@@ -226,16 +227,16 @@ class _RpcConnection:
 
 def _prompt(value: str) -> str:
     if not isinstance(value, str) or not value.strip():
-        raise BridgeError("请输入要发送的任务。")
+        raise BridgeError(tr("请输入要发送的任务。"))
     if "\x00" in value:
-        raise BridgeError("任务中包含无效的空字符。")
+        raise BridgeError(tr("任务中包含无效的空字符。"))
     return value
 
 
 def _directory(value: str | os.PathLike[str]) -> str:
     path = Path(value).expanduser()
     if not path.is_absolute() or not path.is_dir():
-        raise BridgeError("工作目录必须是存在的文件夹的绝对路径。")
+        raise BridgeError(tr("工作目录必须是存在的文件夹的绝对路径。"))
     return str(path.resolve())
 
 
@@ -243,7 +244,7 @@ def _thread_id(value: str) -> str:
     # CLI also accepts titles; reject those so a duplicate title cannot misroute work.
     if not isinstance(value, str) or not re.fullmatch(
             r"(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|thr_[A-Za-z0-9_-]+)", value):
-        raise BridgeError("必须明确选择对话 ID，不能使用对话名称或自动猜测当前对话。")
+        raise BridgeError(tr("必须明确选择对话 ID，不能使用对话名称或自动猜测当前对话。"))
     return value
 
 
@@ -252,7 +253,7 @@ def _image_input(image_path: str | os.PathLike[str] | None) -> list[dict[str, st
         return []
     path = Path(image_path)
     if not path.is_absolute() or not path.is_file():
-        raise BridgeError("截图必须是存在的本地文件的绝对路径。")
+        raise BridgeError(tr("截图必须是存在的本地文件的绝对路径。"))
     return [{"type": "localImage", "path": str(path.resolve())}]
 
 
@@ -327,7 +328,7 @@ class CodexBridge:
                         result = connection.request("thread/list", params)
                         data = result.get("data")
                         if not isinstance(data, list):
-                            raise BridgeError("Codex thread/list 响应缺少 data 列表。")
+                            raise BridgeError(tr("Codex thread/list 响应缺少 data 列表。"))
                         for row in data:
                             if not isinstance(row, dict) or not isinstance(row.get("id"), str):
                                 continue
@@ -351,7 +352,7 @@ class CodexBridge:
                     self.last_shared_error = str(exc)
                     continue
                 self.last_list_backend = None
-                raise BridgeUnavailable("无法读取本地 Codex 对话。请检查 CLI 和 Codex 登录状态。") from exc
+                raise BridgeUnavailable(tr("无法读取本地 Codex 对话。请检查 CLI 和 Codex 登录状态。")) from exc
         return []  # Both attempts return or raise above.
 
     def send_new(self, prompt: str, cwd: str,
@@ -366,23 +367,23 @@ class CodexBridge:
                 started = connection.request("thread/start", {"cwd": cwd})
                 thread = started.get("thread", {})
                 if not isinstance(thread, dict) or not isinstance(thread.get("id"), str):
-                    raise BridgeError("Codex 没有返回新对话 ID，任务未发送。")
+                    raise BridgeError(tr("Codex 没有返回新对话 ID，任务未发送。"))
                 thread_id = _thread_id(thread["id"])
                 turn = connection.request("turn/start", {"threadId": thread_id, "input": inputs})
                 self._confirmed_turn(turn)
                 return DispatchResult(thread_id, "shared-app-server", "submitted")
         except (BridgeError, OSError) as exc:
             if thread_id:
-                raise BridgeError(f"已创建对话 {thread_id}，但未确认任务开始。请在 Codex 检查后再重试。") from exc
-            raise BridgeUnavailable("共享 Codex app-server 不可用，任务未确认发送。可使用“在 Codex 打开草稿”手动发送。") from exc
+                raise BridgeError(tr("已创建对话 {thread_id}，但未确认任务开始。请在 Codex 检查后再重试。", thread_id=thread_id)) from exc
+            raise BridgeUnavailable(tr("共享 Codex app-server 不可用，任务未确认发送。可使用“在 Codex 打开草稿”手动发送。")) from exc
 
     @staticmethod
     def _confirmed_turn(result: dict[str, Any]) -> None:
         turn = result.get("turn")
         if not isinstance(turn, dict) or not isinstance(turn.get("id"), str) or not turn["id"]:
-            raise BridgeError("Codex 未返回 turn ID，不能确认任务已开始。")
+            raise BridgeError(tr("Codex 未返回 turn ID，不能确认任务已开始。"))
         if turn.get("status") in {"failed", "interrupted"}:
-            raise BridgeError("Codex 未成功开始任务，请在 Codex 查看失败原因。")
+            raise BridgeError(tr("Codex 未成功开始任务，请在 Codex 查看失败原因。"))
 
     def send_existing(self, thread_id: str, prompt: str, cwd: str | None = None,
                       image_path: str | None = None) -> DispatchResult:
@@ -392,7 +393,7 @@ class CodexBridge:
         if cwd is not None:
             _directory(cwd)
         if image_path is not None:
-            raise BridgeError("Codex queue 不支持图片附件。请通过本地捕获 MCP 工具读取截图，或在 Codex 手动添加图片。")
+            raise BridgeError(tr("Codex queue 不支持图片附件。请通过本地捕获 MCP 工具读取截图，或在 Codex 手动添加图片。"))
         if self._has_queue():
             try:
                 result = subprocess.run(
@@ -400,18 +401,18 @@ class CodexBridge:
                     capture_output=True, text=True, encoding="utf-8", errors="replace",
                     timeout=self.timeout, **_process_options())
             except subprocess.TimeoutExpired as exc:
-                raise BridgeTimeout("发送超时，任务可能已排队。请先在 Codex 检查，避免重复发送。") from exc
+                raise BridgeTimeout(tr("发送超时，任务可能已排队。请先在 Codex 检查，避免重复发送。")) from exc
             except OSError as exc:
-                raise BridgeUnavailable("无法运行 Codex queue，任务未确认发送。") from exc
+                raise BridgeUnavailable(tr("无法运行 Codex queue，任务未确认发送。")) from exc
             if result.returncode != 0:
-                raise BridgeError("Codex queue 没有确认任务排队成功。请在 Codex 检查登录、目标对话和共享服务。")
+                raise BridgeError(tr("Codex queue 没有确认任务排队成功。请在 Codex 检查登录、目标对话和共享服务。"))
             return DispatchResult(thread_id, "codex-queue", "queued")
         # Older CLIs without queue still need the shared daemon. No mutation fallback.
         with self._connection() as connection:
             resumed = connection.request("thread/resume", {"threadId": thread_id, "excludeTurns": True})
             resumed_thread = resumed.get("thread")
             if not isinstance(resumed_thread, dict) or resumed_thread.get("id") != thread_id:
-                raise BridgeError("Codex 返回的对话 ID 与所选对话不同，任务未发送。")
+                raise BridgeError(tr("Codex 返回的对话 ID 与所选对话不同，任务未发送。"))
             result = connection.request("turn/start", {"threadId": thread_id,
                                                         "input": [{"type": "text", "text": prompt}]})
             self._confirmed_turn(result)
@@ -431,12 +432,12 @@ class CodexBridge:
     @staticmethod
     def _open_desktop_link(url: str) -> None:
         if not url.startswith("codex://"):
-            raise BridgeError("无效的 Codex 链接。")
+            raise BridgeError(tr("无效的 Codex 链接。"))
         startfile = getattr(os, "startfile", None)
         if startfile is None:
-            raise BridgeUnavailable("此桌面集成需要 Windows 和已注册 codex:// 协议的 Codex 应用。")
+            raise BridgeUnavailable(tr("此桌面集成需要 Windows 和已注册 codex:// 协议的 Codex 应用。"))
         try:
             # ShellExecute resolves the registered protocol; no command shell is used.
             startfile(url)
         except OSError as exc:
-            raise BridgeUnavailable("无法打开 Codex。请安装桌面应用并注册 codex:// 协议。") from exc
+            raise BridgeUnavailable(tr("无法打开 Codex。请安装桌面应用并注册 codex:// 协议。")) from exc

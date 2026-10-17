@@ -6,12 +6,17 @@ A small Windows companion that brings a window, file, or folder into your Codex 
 
 Drag the floating circle onto a target, or drop a file onto the circle. Choose a task and continue in a new or explicitly selected chat. A compact native interface, local context capture, and fewer trips between windows.
 
-![Codex Pointer native task panel](docs/preview-light.png)
+| Light | Dark |
+| --- | --- |
+| ![English native task panel in light theme](docs/preview-light-en.png) | ![English native task panel in dark theme](docs/preview-dark-en.png) |
 
-**v0.5.2 is a Windows preview.** This community project is not affiliated with OpenAI. Pointer selects context; the tools available in your Codex chat perform the work. It does not install a universal desktop-control engine.
+These previews are rendered from the real Qt interface with synthetic targets; they do not capture a desktop or send a task.
+
+**v0.6.0 is a Windows preview.** This community project is not affiliated with OpenAI. Pointer selects context; the tools available in your Codex chat perform the work. It does not install a universal desktop-control engine.
 
 ## What it does
 
+- Follow Codex’s language for an English or Simplified Chinese native interface and task starters. Other languages use English.
 - Drag onto an app window or an Explorer item, with a window outline and target preview. Press **Esc** to cancel.
 - Drop **one file or folder** onto the circle, including paths containing spaces or Chinese characters and accessible UNC shares. Files are never moved or executed.
 - Use target-specific quick tasks. A click fills the composer; existing text is preserved, repeated clicks are deduplicated, and nothing is sent automatically.
@@ -23,7 +28,7 @@ Drag the floating circle onto a target, or drop a file onto the circle. Choose a
 
 Requires **Windows 10/11 x64** and an installed, signed-in Codex desktop client with its native CLI. No separate Python installation is needed for the release ZIP.
 
-1. Download `codex-pointer-0.5.2-windows-x64.zip` from the [latest release](https://github.com/youisan/codex-pointer/releases/latest) and extract it. Keep the complete folder, including the GUI's `_internal` directory.
+1. Download `codex-pointer-0.6.0-windows-x64.zip` from the [latest release](https://github.com/youisan/codex-pointer/releases/latest) and extract it. Keep the complete folder, including the GUI's `_internal` directory.
 2. Open the extracted `codex-pointer` folder in Codex, or open a terminal in that folder and run:
 
    ```powershell
@@ -43,7 +48,7 @@ When upgrading, quit the old circle through its context menu before opening the 
 2. Write a request or select a quick task. Screenshots are **off by default**; opt in and preview the exact image before submitting.
 3. Choose **New chat** to open a prefilled Codex draft, then confirm sending inside Codex. For **Continue chat**, explicitly select a conversation first.
 
-`Ctrl+Alt+Space` selects the recently focused external app when the shortcut is available. `Ctrl+Enter` triggers the panel's primary action. `Esc` closes an idle panel or cancels an active drag. The native companion currently uses Chinese interface labels; the website and documentation support English and Chinese.
+`Ctrl+Alt+Space` selects the recently focused external app when the shortcut is available. `Ctrl+Enter` triggers the panel's primary action. `Esc` closes an idle panel or cancels an active drag. Native controls and built-in quick tasks follow Codex's language, with English and Simplified Chinese support. Other Codex languages use English. Your own task text is preserved when the language changes.
 
 | Action | Behavior and limits |
 | --- | --- |
@@ -67,13 +72,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 python scripts/verify_release.py
 python scripts/verify_plugin_install.py --codex 'C:\path\to\native\codex.exe'
 python scripts/benchmark_switching.py
+python scripts/render_readme_previews.py
 ```
 
-Builds go to `dist/v0.5.2/`: the standalone GUI, MCP host, complete plugin ZIP, SHA256 checksums, and license notices. Source checkouts do not include binaries; build before installing the plugin from source.
+Builds go to `dist/v0.6.0/`: the standalone GUI, MCP host, complete plugin ZIP, SHA256 checksums, and license notices. Source checkouts do not include binaries; build before installing the plugin from source.
 
 Tests use synthetic contexts and owned/offscreen UI. Release verification installs the ZIP in an isolated Codex home to check real plugin discovery, relative executable paths, and global launcher metadata. It does not submit a model task or inspect your screen. The responsiveness benchmark simulates a 600ms lookup; it does not measure complete real-world Explorer latency.
 
 `website/` is a dependency-free bilingual static site. [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) deploys it from `main` through the included workflow.
+
+<details>
+<summary>English website preview</summary>
+
+![Codex Pointer English homepage](docs/homepage-en.png)
+
+</details>
 
 ## Privacy and limitations
 

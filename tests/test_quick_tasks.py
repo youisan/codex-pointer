@@ -12,6 +12,7 @@ from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import QApplication
 
 from codex_pointer.panel import TaskPanel
+from codex_pointer.i18n import language, set_language
 from codex_pointer.quick_tasks import insertion_for, tasks_for
 from codex_pointer.ui import apply_theme, theme_for
 from codex_pointer.windows import TargetContext
@@ -23,6 +24,10 @@ WINDOW = TargetContext(kind="window", title="Editor", process_name="editor.exe",
 
 
 class QuickTaskDataTests(unittest.TestCase):
+    def setUp(self):
+        self.addCleanup(set_language, language())
+        set_language("zh-CN")
+
     def test_each_supported_kind_has_three_short_distinct_starters(self):
         keys = []
         for target in (FOLDER, FILE, WINDOW):
@@ -61,6 +66,8 @@ class QuickTaskPanelTests(unittest.TestCase):
         cls.application.setQuitOnLastWindowClosed(False)
 
     def setUp(self):
+        self.addCleanup(set_language, language())
+        set_language("zh-CN")
         theme = theme_for("light")
         apply_theme(self.application, theme)
         self.controller = SimpleNamespace(
@@ -175,6 +182,22 @@ class QuickTaskPanelTests(unittest.TestCase):
         self.assertTrue(self.panel.quick_tasks_row.isVisible())
         self.assertTrue(self.panel.primary.isVisible())
         self.assertIn(theme_for("dark").surface, self.panel.quick_tasks_row.styleSheet())
+
+    def test_language_refresh_changes_task_labels_without_rewriting_draft(self):
+        self.panel.editor.setPlainText("请保留我的原稿")
+        set_language("en-US")
+        self.panel.refresh_target()
+        self.assertEqual([button.text() for button in self.panel.quick_task_buttons],
+                         [task.label for task in tasks_for(FOLDER)])
+        self.assertEqual(self.panel.editor.toPlainText(), "请保留我的原稿")
+        self.click_starter()
+        once = self.panel.editor.toPlainText()
+        self.assertIn("Outline this folder", once)
+        set_language("zh-CN")
+        self.panel.refresh_target()
+        self.click_starter()
+        self.assertEqual(self.panel.editor.toPlainText(), once)
+        self.controller.primary_action.assert_not_called()
 
 
 if __name__ == "__main__":

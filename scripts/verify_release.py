@@ -74,9 +74,9 @@ def verify(dist):
         assert not replies[6]["result"]["isError"]
         assert isinstance(replies[6]["result"]["structuredContent"]["running"], bool)
         print("Frozen MCP: version, handshake, recovery, UTF-8, image, global launcher and readonly status passed.")
-        for executable in (gui, portable):
+        for executable, language in ((gui, "en-US"), (portable, "zh-CN")):
             output = root / ("standalone.png" if executable == gui else "portable.png")
-            subprocess.run([str(executable), "--render-preview", str(output), "--theme", "light"],
+            subprocess.run([str(executable), "--render-preview", str(output), "--theme", "light", "--language", language],
                 env=dict(os.environ, QT_QPA_PLATFORM="offscreen"), timeout=40, check=True)
             data = output.read_bytes()
             assert data.startswith(b"\x89PNG\r\n\x1a\n")
@@ -92,7 +92,9 @@ def verify(dist):
         for suffix in [".agents/plugins/marketplace.json", "plugins/codex-pointer/plugin.json",
                        "plugins/codex-pointer/mcp.json", "plugins/codex-pointer/bin/CodexPointer.exe",
                        "plugins/codex-pointer/bin/CodexPointerHost.exe", "THIRD_PARTY_NOTICES.txt",
-                       "THIRD_PARTY_LICENSES/LGPL-3.0.txt", "docs/preview-light.png", "docs/preview-dark.png"]:
+                       "THIRD_PARTY_LICENSES/LGPL-3.0.txt", "docs/preview-light.png", "docs/preview-dark.png",
+                       "docs/preview-light-en.png", "docs/preview-dark-en.png", "docs/preview-light-zh-CN.png",
+                       "docs/preview-dark-zh-CN.png", "docs/homepage-en.png", "docs/homepage-zh.png"]:
             assert any(p.endswith(suffix) for p in paths), suffix
         manifest_path = next(p for p in paths if p.endswith("plugins/codex-pointer/plugin.json"))
         manifest = json.loads(archive.read(manifest_path))

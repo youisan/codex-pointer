@@ -9,6 +9,7 @@ import sys
 from . import __version__
 from .captures import read_capture
 from .iconography import data_icon
+from .i18n import normalize_language, set_language, tr
 from .launcher import LauncherError, hide_pointer, pointer_status, show_pointer
 
 
@@ -40,15 +41,15 @@ def tool_definitions():
         "_meta": {"ui": {"resourceUri": LAUNCHER_URI},
                   "openai/ui": {"entrypoints": [{"type": "global"}]}},
     }, {
-        "name": "pointer_status", "title": "Pointer 状态",
+        "name": "pointer_status", "title": tr("Pointer 状态"),
         "description": "Read whether the local Windows Codex Pointer companion is running. Does not start it, capture content or send tasks.",
         "inputSchema": EMPTY_INPUT, "annotations": readonly,
     }, {
-        "name": "show_pointer", "title": "显示 Pointer 按钮",
+        "name": "show_pointer", "title": tr("显示 Pointer 按钮"),
         "description": "Show the Windows Codex Pointer floating button, starting the bundled companion if needed. Use only when the user asks to open or show Pointer. Does not select a target, take screenshots or send tasks.",
         "inputSchema": EMPTY_INPUT, "annotations": local_action,
     }, {
-        "name": "hide_pointer", "title": "隐藏 Pointer 按钮",
+        "name": "hide_pointer", "title": tr("隐藏 Pointer 按钮"),
         "description": "Request hiding of the local Codex Pointer floating button and its idle panels. Keeps the companion and unsent draft in memory; does not terminate programs or send tasks.",
         "inputSchema": EMPTY_INPUT, "annotations": local_action,
     }]
@@ -61,7 +62,7 @@ def tool_definitions():
 
 def launcher_resource():
     return {"uri": LAUNCHER_URI, "name": "Codex Pointer", "mimeType": HTML_MIME,
-            "description": "显示或隐藏桌面浮动按钮。",
+            "description": tr("显示或隐藏桌面浮动按钮。"),
             "_meta": {"ui": {"prefersBorder": False,
                               "csp": {"connectDomains": [], "resourceDomains": []}}}}
 
@@ -74,6 +75,11 @@ def handle(message: dict) -> dict | None:
     params = message.get("params", {})
     if not isinstance(params, dict):
         return {"jsonrpc": "2.0", "id": identifier, "error": {"code": -32602, "message": "params must be an object"}}
+    metadata = params.get("_meta", {})
+    if isinstance(metadata, dict):
+        locale = metadata.get("openai/locale", metadata.get("webplus/i18n"))
+        if isinstance(locale, str) and locale.strip():
+            set_language(normalize_language(locale, default="en-US"))
     if method == "initialize":
         requested = params.get("protocolVersion", "2024-11-05")
         supported = {"2024-11-05", "2025-03-26", "2025-06-18"}
@@ -131,6 +137,8 @@ def handle(message: dict) -> dict | None:
 def serve():
     # A --noconsole PyInstaller executable has no sys.stdin/stdout. Use the console
     # build for the MCP server; its client starts the process with a hidden window.
+    from .codex_language import CodexLanguageReader
+    set_language(CodexLanguageReader().read())
     if sys.stdin is None or sys.stdout is None:
         raise RuntimeError("MCP 需要控制台版 CodexPointerHost.exe。")
     if hasattr(sys.stdin, "reconfigure"):

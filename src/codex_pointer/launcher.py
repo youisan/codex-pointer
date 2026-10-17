@@ -15,6 +15,8 @@ import subprocess
 import sys
 import time
 
+from .i18n import tr
+
 
 MUTEX_NAME = r"Local\CodexPointer-v1"
 SHOW_EVENT_NAME = r"Local\CodexPointer-show-v1"
@@ -37,7 +39,7 @@ class _Win32Control:
 
     def __init__(self) -> None:
         if sys.platform != "win32":
-            raise LauncherError("Codex Pointer 的悬浮按钮目前仅支持 Windows。")
+            raise LauncherError(tr("Codex Pointer 的悬浮按钮目前仅支持 Windows。"))
         self.kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
         for name, result, arguments in (
             ("OpenMutexW", wintypes.HANDLE,
@@ -63,8 +65,7 @@ class _Win32Control:
             if error in (self.ERROR_FILE_NOT_FOUND, self.ERROR_INVALID_NAME):
                 return None
             raise LauncherError(
-                f"无法访问 Codex Pointer 的本地控制通道（Windows 错误 {error}）。"
-                "请确保悬浮按钮与 Codex 使用相同的 Windows 用户和权限运行。"
+                tr("无法访问 Codex Pointer 的本地控制通道（Windows 错误 {error}）。请确保悬浮按钮与 Codex 使用相同的 Windows 用户和权限运行。", error=error)
             )
         return handle
 
@@ -84,7 +85,7 @@ class _Win32Control:
         try:
             if not self.SetEvent(handle):
                 error = ctypes.get_last_error()
-                raise LauncherError(f"无法请求更改悬浮按钮的显示状态（Windows 错误 {error}）。")
+                raise LauncherError(tr("无法请求更改悬浮按钮的显示状态（Windows 错误 {error}）。", error=error))
             return True
         finally:
             self.CloseHandle(handle)
@@ -136,25 +137,23 @@ def pointer_status() -> dict:
 
 def _require_windows(status: dict) -> None:
     if status["platform"] != "win32":
-        raise LauncherError("Codex Pointer 的悬浮按钮目前仅支持 Windows。")
+        raise LauncherError(tr("Codex Pointer 的悬浮按钮目前仅支持 Windows。"))
 
 
 def _legacy_instance_error() -> LauncherError:
     return LauncherError(
-        "检测到正在运行的 Codex Pointer，但显示控制尚未就绪。"
-        "如果是旧版悬浮按钮，请先在其右键菜单中退出旧版，再重新打开；"
-        "如果刚刚启动，请稍后重试。"
+        tr("检测到正在运行的 Codex Pointer，但显示控制尚未就绪。如果是旧版悬浮按钮，请先在其右键菜单中退出旧版，再重新打开；如果刚刚启动，请稍后重试。")
     )
 
 
 def _show_existing(status: dict) -> dict:
     if not _Win32Control().signal(SHOW_EVENT_NAME):
-        raise LauncherError("悬浮按钮的控制通道已关闭，请重试打开。")
+        raise LauncherError(tr("悬浮按钮的控制通道已关闭，请重试打开。"))
     return {
         **status,
         "status": "shown",
         "requested": True,
-        "message": "已向正在运行的悬浮按钮发送显示请求。",
+        "message": tr("已向正在运行的悬浮按钮发送显示请求。"),
     }
 
 
@@ -169,8 +168,7 @@ def show_pointer() -> dict:
     command = _gui_command()
     if command is None:
         raise LauncherError(
-            "找不到 CodexPointer.exe。请安装完整 Windows 插件包，"
-            "并保留 CodexPointerHost.exe 旁的 CodexPointer.exe 和 _internal 文件夹。"
+            tr("找不到 CodexPointer.exe。请安装完整 Windows 插件包，并保留 CodexPointerHost.exe 旁的 CodexPointer.exe 和 _internal 文件夹。")
         )
     argv, working_directory = command
     try:
@@ -185,7 +183,7 @@ def show_pointer() -> dict:
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
         )
     except OSError as error:
-        raise LauncherError(f"无法启动 Codex Pointer：{error}") from error
+        raise LauncherError(tr("无法启动 Codex Pointer：{error}", error=error)) from error
 
     deadline = time.monotonic() + _READY_TIMEOUT_SECONDS
     while True:
@@ -195,8 +193,7 @@ def show_pointer() -> dict:
             return _show_existing(status)
         if return_code is not None:
             raise LauncherError(
-                f"Codex Pointer 在控制通道就绪前退出（退出码 {return_code}）。"
-                "请重新安装完整插件包后重试。"
+                tr("Codex Pointer 在控制通道就绪前退出（退出码 {return_code}）。请重新安装完整插件包后重试。", return_code=return_code)
             )
         remaining = deadline - time.monotonic()
         if remaining <= 0:
@@ -204,7 +201,7 @@ def show_pointer() -> dict:
                 **status,
                 "status": "launch_requested",
                 "requested": True,
-                "message": "已启动悬浮按钮进程，但尚未确认显示控制就绪，请稍后检查或重试。",
+                "message": tr("已启动悬浮按钮进程，但尚未确认显示控制就绪，请稍后检查或重试。"),
             }
         time.sleep(min(_POLL_INTERVAL_SECONDS, remaining))
 
@@ -218,15 +215,15 @@ def hide_pointer() -> dict:
             **status,
             "status": "already_hidden",
             "requested": False,
-            "message": "悬浮按钮没有运行。",
+            "message": tr("悬浮按钮没有运行。"),
         }
     if not status["control_available"]:
         raise _legacy_instance_error()
     if not _Win32Control().signal(HIDE_EVENT_NAME):
-        raise LauncherError("悬浮按钮的控制通道已关闭，请重试隐藏。")
+        raise LauncherError(tr("悬浮按钮的控制通道已关闭，请重试隐藏。"))
     return {
         **status,
         "status": "hide_requested",
         "requested": True,
-        "message": "已发送隐藏请求；正在选择目标或发送任务时会延后处理。",
+        "message": tr("已发送隐藏请求；正在选择目标或发送任务时会延后处理。"),
     }

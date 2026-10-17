@@ -4,11 +4,11 @@
 
 将一个小按钮拖到窗口或文件夹上，把目标上下文带进 Codex。
 
-**0.5.2 是 Windows 预览版。** 新增随对象变化的快捷任务，以及把单个文件或文件夹直接拖入圆圈。已有功能包括按对象记住对话、拖动目标预览和最近对象。客户端内的启动面板可以显示 / 隐藏浮动按钮。原生按钮和紧凑任务面板采用与 Codex 客户端协调的灰阶、字级和圆角，支持浅色 / 深色主题。桌面按钮负责识别目标、整理上下文；Codex 中已有的工具负责执行任务。此项目与 OpenAI 无隶属关系。
+**0.6.0 是 Windows 预览版。** 原生界面和内置快捷任务支持 English / 简体中文，跟随 Codex 语言。保留随对象变化的快捷任务、单个文件或文件夹拖入圆圈、按对象记住对话、拖动目标预览和最近对象。客户端内的启动面板可以显示 / 隐藏浮动按钮。原生按钮和紧凑任务面板采用与 Codex 客户端协调的灰阶、字级和圆角，支持浅色 / 深色主题。桌面按钮负责识别目标、整理上下文；Codex 中已有的工具负责执行任务。此项目与 OpenAI 无隶属关系。
 
 | 浅色 | 深色 |
 | --- | --- |
-| ![浅色原生界面](docs/preview-light.png) | ![深色原生界面](docs/preview-dark.png) |
+| ![中文浅色原生界面](docs/preview-light-zh-CN.png) | ![中文深色原生界面](docs/preview-dark-zh-CN.png) |
 
 上图由真实 Qt 组件离屏渲染。面板默认展示目标、对话选择、快捷任务、任务输入与一个主操作；连接诊断等放进菜单。支持 160ms 展开过渡、悬停和按压反馈、处理状态细环，以及减少动态效果设置。
 
@@ -23,7 +23,7 @@
 
 切换对象时，窗口信息先显示，Explorer 路径在后台补全，期间可以继续输入。新选择会取消旧查询并丢弃过时结果；同一面板原地更新，不反复收起和展开。Explorer 查询复用后台进程，超时后仍可使用窗口信息。识别完成前不能发送。已经删除、不可访问或类型改变的文件夹，在提交时会明确报错。
 
-`Ctrl+Alt+Space` 唤起当前软件目标（快捷键未被其他程序占用时）；`Ctrl+Enter` 执行面板主操作，`Esc` 关闭空闲面板。未发送的任务会在本次程序运行期间保留。深浅主题可在顶栏切换，首次启动跟随 Windows 主题。
+`Ctrl+Alt+Space` 唤起当前软件目标（快捷键未被其他程序占用时）；`Ctrl+Enter` 执行面板主操作，`Esc` 关闭空闲面板。未发送的任务会在本次程序运行期间保留。原生控件和内置快捷任务跟随 Codex 的语言设置，支持 English 和简体中文，其他 Codex 语言使用英文；语言变化不会改写你输入的任务。深浅主题可在顶栏切换，首次启动跟随 Windows 主题。
 
 启动面板打开时只读取状态，点击显示后才启动辅助程序。**隐藏按钮**保留进程与草稿，之后可再次显示；右键 **退出**才结束程序。隐藏或关闭面板会取消未完成的目标识别；截图或发送任务期间会延后显示 / 隐藏请求。启动请求与显示请求都不代表已确认窗口可见。
 
@@ -97,13 +97,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 python scripts/verify_release.py
 python scripts/verify_plugin_install.py --codex 'C:\path\to\native\codex.exe'
 python scripts/benchmark_switching.py
+python scripts/render_readme_previews.py
 ```
 
 产物：
 
-- `dist/v0.5.2/CodexPointer.exe`：独立悬浮按钮。
-- `dist/v0.5.2/CodexPointerHost.exe`：独立控制台 MCP 服务，不携带 Qt，可用 `--diagnose` 检查连接。
-- `dist/v0.5.2/codex-pointer-0.5.2-windows-x64.zip`：完整插件、便携 GUI、MCP Host、说明和许可证。便携 GUI 的 `_internal` 文件夹必须与 EXE 保持在一起。
+- `dist/v0.6.0/CodexPointer.exe`：独立悬浮按钮。
+- `dist/v0.6.0/CodexPointerHost.exe`：独立控制台 MCP 服务，不携带 Qt，可用 `--diagnose` 检查连接。
+- `dist/v0.6.0/codex-pointer-0.6.0-windows-x64.zip`：完整插件、便携 GUI、MCP Host、说明和许可证。便携 GUI 的 `_internal` 文件夹必须与 EXE 保持在一起。
 
 新旧版本独立输出，避免覆盖正在运行的程序。升级试用前，从旧按钮的右键菜单退出，再打开新版。
 
@@ -128,9 +129,16 @@ Qt / PySide 的第三方通知与许可证随产物一起分发。项目本身�
 
 ## 发布到 GitHub
 
-源码与安装包发布于 [GitHub](https://github.com/youisan/codex-pointer)。用 tag `v0.5.2` 建立 Release，并上传上述 ZIP、两个 EXE、第三方通知、许可证与 SHA256 校验信息。仓库包含 MIT 许可证；发布者可以在正式发布前调整项目名和许可选择。主页位于 [youisan.github.io/codex-pointer](https://youisan.github.io/codex-pointer/)，支持英中切换。
+源码与安装包发布于 [GitHub](https://github.com/youisan/codex-pointer)。用 tag `v0.6.0` 建立 Release，并上传上述 ZIP、两个 EXE、第三方通知、许可证与 SHA256 校验信息。仓库包含 MIT 许可证；发布者可以在正式发布前调整项目名和许可选择。主页位于 [youisan.github.io/codex-pointer](https://youisan.github.io/codex-pointer/)，支持英中切换。
 
 GitHub 开源分发与官方插件目录上架是两个流程。目前官方对本地 MCP 的公共目录提交有伙伴准入要求，参见[桌面插件提交说明](https://developers.openai.com/plugins/deploy/desktop-only)。
+
+<details>
+<summary>中文主页预览</summary>
+
+![Codex Pointer 中文主页](docs/homepage-zh.png)
+
+</details>
 
 ## 已知待验证项
 

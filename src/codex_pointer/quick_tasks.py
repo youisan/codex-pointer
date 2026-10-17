@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from .i18n import tr, translate
+
 
 @dataclass(frozen=True)
 class QuickTask:
@@ -35,7 +37,8 @@ _TASKS = {
 def tasks_for(target: Any) -> tuple[QuickTask, ...]:
     """Choose built-in prompts by target kind, without reading target content."""
     kind = target.get("kind") if isinstance(target, Mapping) else getattr(target, "kind", None)
-    return _TASKS.get(kind, ()) if isinstance(kind, str) else ()
+    tasks = _TASKS.get(kind, ()) if isinstance(kind, str) else ()
+    return tuple(QuickTask(task.key, tr(task.label), tr(task.prompt)) for task in tasks)
 
 
 def insertion_for(draft: str, task: QuickTask) -> str | None:
@@ -45,7 +48,11 @@ def insertion_for(draft: str, task: QuickTask) -> str | None:
     The Qt caller appends this chunk in one undo block and keeps final dispatch
     as a separate action.
     """
-    if task.prompt in draft:
+    original = next((item for tasks in _TASKS.values() for item in tasks if item.key == task.key), None)
+    prompts = {task.prompt}
+    if original:
+        prompts.update(translate(original.prompt, code) for code in ("zh-CN", "en-US"))
+    if any(prompt in draft for prompt in prompts):
         return None
     if not draft.strip() or draft.endswith("\n\n"):
         return task.prompt

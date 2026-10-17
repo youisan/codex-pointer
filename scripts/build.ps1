@@ -9,6 +9,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Icon asset generation failed.' }
     python scripts/sync_ui_icons.py
     if ($LASTEXITCODE -ne 0) { throw 'Launcher icon synchronization failed.' }
+    python scripts/sync_launcher_translations.py
+    if ($LASTEXITCODE -ne 0) { throw 'Launcher translation synchronization failed.' }
 
     # Collect notices from the installed community wheels before freezing. The
     # 6.7.0 wheels do not ship LGPL/GPL texts, so keep official copies in source.
@@ -165,7 +167,9 @@ if python_license.is_file():
     Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE'),(Join-Path $taskRoot 'README.md'),(Join-Path $taskRoot 'README.zh-CN.md'),(Join-Path $taskDist 'THIRD_PARTY_NOTICES.txt') -Destination $taskStage -Force
     $taskDocs = Join-Path $taskStage 'docs'
     New-Item -ItemType Directory -Force -Path $taskDocs | Out-Null
-    Copy-Item -LiteralPath (Join-Path $taskRoot 'docs\preview-light.png'),(Join-Path $taskRoot 'docs\preview-dark.png') -Destination $taskDocs -Force
+    foreach ($taskDocImage in @('preview-light.png', 'preview-dark.png', 'preview-light-en.png', 'preview-dark-en.png', 'preview-light-zh-CN.png', 'preview-dark-zh-CN.png', 'homepage-en.png', 'homepage-zh.png')) {
+        Copy-Item -LiteralPath (Join-Path $taskRoot "docs\$taskDocImage") -Destination $taskDocs -Force
+    }
     Copy-Item -LiteralPath $taskLicenses -Destination $taskStage -Recurse -Force
     $taskArchiveName = "codex-pointer-$taskVersion-windows-x64.zip"
     $taskArchive = Join-Path $taskDist $taskArchiveName

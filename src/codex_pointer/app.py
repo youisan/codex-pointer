@@ -18,6 +18,8 @@ from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QHBoxLayout, Q
 from shiboken6 import isValid
 
 from .bridge import CodexBridge
+from .i18n import language as current_language, set_language, tr
+from .codex_language import CodexLanguageReader
 from .captures import bundle_reference, save_capture
 from .context import build_prompt, working_directory
 from .control_events import ControlEvents
@@ -50,6 +52,15 @@ def system_reduced_motion():
     return not bool(enabled.value)
 
 
+def translated(widget, key, method="setText", **kwargs):
+    """Keep the source of auxiliary dialog labels for in-place translation."""
+    bindings = getattr(widget, "_pointer_translations", {})
+    bindings[method] = (key, kwargs)
+    widget._pointer_translations = bindings
+    getattr(widget, method)(tr(key, **kwargs))
+    return widget
+
+
 class WorkerSignals(QObject):
     finished = Signal(object, object)
 
@@ -72,9 +83,13 @@ class HotkeyFilter(QAbstractNativeEventFilter):
 
 
 class PointerController(QObject):
-    def __init__(self, application, *, preview=False, theme=None, reduced_motion=None):
+    def __init__(self, application, *, preview=False, theme=None, reduced_motion=None, language=None):
         super().__init__()
         self.application, self.preview = application, preview
+        if language is not None:
+            set_language(language)
+        self._language_reader = None if preview or language is not None else CodexLanguageReader()
+        self._language_job_active = False
         self.settings = {} if preview else load_settings()
         # The former global binding must not follow an unrelated new target.
         self.settings.pop("thread_id", None)
@@ -122,7 +137,12 @@ class PointerController(QObject):
             x, y = 72, 180
         self.button.move(x, y)
         application.installEventFilter(self)
+        self.language_timer = QTimer(self)
+        self.language_timer.setInterval(1000)
+        self.language_timer.timeout.connect(self.refresh_language)
         if not preview:
+            self.language_timer.start()
+            self.refresh_language()
             self.tracker = QTimer(self)
             self.tracker.timeout.connect(self.track_foreground)
             self.tracker.start(300)
@@ -130,6 +150,34 @@ class PointerController(QObject):
             application.installNativeEventFilter(self.hotkey)
             self.hotkey_registered = bool(ctypes.windll.user32.RegisterHotKey(None, 0x5042, 0x4003, 0x20))
             application.aboutToQuit.connect(self.cleanup)
+
+    def refresh_language(self):
+        # Config reads stay off the GUI thread, including redirected home paths.
+        if self._closing or self._language_reader is None or self._language_job_active:
+            return
+        self._language_job_active = True
+        def done(code):
+            self._language_job_active = False
+            self.apply_language(code)
+        def failed(_error):
+            self._language_job_active = False
+        self.run_worker(self._language_reader.read, done, failed)
+
+    def apply_language(self, code):
+        if code == current_language():
+            return
+        set_language(code)
+        self.button.retranslate_ui()
+        if self.panel:
+            self.panel.retranslate_ui()
+        if self.target_preview:
+            self.target_preview.retranslate_ui()
+        for window in self.application.topLevelWidgets():
+            if not isValid(window):
+                continue
+            for widget in [window, *window.findChildren(QObject)]:
+                for method, (key, kwargs) in getattr(widget, "_pointer_translations", {}).items():
+                    getattr(widget, method)(tr(key, **kwargs))
 
     def persist(self):
         if not self.preview:
@@ -351,7 +399,7 @@ class PointerController(QObject):
             self.selecting, self.target = False, None
             self.button.set_busy(False)
             self.panel.refresh_target()
-            self.panel.show_notice(f"未能识别目标：{error}")
+            self.panel.show_notice("未能识别目标：{error}", error=error)
         self.submit_latest(channel, work, done, failed)
 
     def apply_route(self, target):
@@ -384,7 +432,7 @@ class PointerController(QObject):
     def choose_folder(self):
         if self.busy:
             return
-        selected = QFileDialog.getExistingDirectory(self.panel or self.button, "选择要交给 Codex 的文件夹")
+        selected = QFileDialog.getExistingDirectory(self.panel or self.button, tr("选择要交给 Codex 的文件夹"))
         if selected:
             target = TargetContext(kind="folder", title=PureWindowsPath(selected).name or selected,
                 path=selected, point=get_cursor_position() if not self.preview else (0, 0), source="folder-picker")
@@ -485,7 +533,7 @@ class PointerController(QObject):
             cwd = working_directory(target, data_directory() / "workspace")
             reference = bundle_reference(identifier, bundle)
             if action == "draft":
-                result = self.bridge.open_new_draft("用户请求：" + instruction + reference, cwd)
+                result = self.bridge.open_new_draft(tr("用户请求：") + instruction + reference, cwd)
             else:
                 prompt = build_prompt(target, instruction, str(output) if output else None) + reference
                 result = self.bridge.send_existing(thread_id, prompt, cwd=cwd) if action == "existing" else self.bridge.send_new(prompt, cwd)
@@ -517,7 +565,7 @@ class PointerController(QObject):
                 self.panel.show_notice("任务已排队，请在 Codex 中查看执行进度。" if result.status == "queued" else "任务已提交，请在 Codex 中查看执行进度。")
         def failed(error):
             restore()
-            self.panel.show_notice(f"未确认完成：{error}\n如已提交，请先检查对话再决定是否重发。")
+            self.panel.show_notice("未确认完成：{error}\n如已提交，请先检查对话再决定是否重发。", error=error)
         QTimer.singleShot(90 if need_capture else 0, lambda: self.run_worker(work, done, failed))
 
     def preview_image(self):
@@ -525,12 +573,12 @@ class PointerController(QObject):
 
     def show_image(self, path):
         view = QDialog(self.panel)
-        view.setWindowTitle("截图预览 · 发送时使用这张图片")
+        translated(view, "截图预览 · 发送时使用这张图片", "setWindowTitle")
         layout = QVBoxLayout(view)
         label = QLabel()
         label.setPixmap(QPixmap(str(path)).scaled(QSize(880, 580), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         layout.addWidget(label)
-        note = QLabel("发送时使用这张预览截图；修改截图范围后会重新生成。")
+        note = translated(QLabel(), "发送时使用这张预览截图；修改截图范围后会重新生成。")
         note.setObjectName("caption")
         layout.addWidget(note)
         self.panel.include_image.blockSignals(True)
@@ -546,31 +594,31 @@ class PointerController(QObject):
             self.picker.raise_()
             return
         picker = self.picker = Popover(self.theme, self.reduced_motion)
-        picker.setWindowTitle("选择 Codex 对话")
+        translated(picker, "选择 Codex 对话", "setWindowTitle")
         head = QHBoxLayout()
-        head.addWidget(QLabel("选择要继续的对话"), 1)
+        head.addWidget(translated(QLabel(), "选择要继续的对话"), 1)
         close = QPushButton()
         close.setObjectName("ghost")
         close.setIcon(icon("x", self.theme.muted))
         close.setFixedSize(32, 32)
-        close.setAccessibleName("关闭")
+        translated(close, "关闭", "setAccessibleName")
         close.clicked.connect(picker.close)
         head.addWidget(close)
         picker.body.addLayout(head)
         search = QLineEdit()
-        search.setPlaceholderText("搜索对话")
+        translated(search, "搜索对话", "setPlaceholderText")
         picker.body.addWidget(search)
         listing = QListWidget()
         listing.setFixedHeight(250)
         picker.body.addWidget(listing)
         manual = QLineEdit()
-        manual.setPlaceholderText("或粘贴完整对话 UUID")
+        translated(manual, "或粘贴完整对话 UUID", "setPlaceholderText")
         picker.body.addWidget(manual)
-        info = QLabel("正在读取本地对话…")
+        info = translated(QLabel(), "正在读取本地对话…")
         info.setObjectName("caption")
         info.setWordWrap(True)
         picker.body.addWidget(info)
-        bind = QPushButton("使用这条对话")
+        bind = translated(QPushButton(), "使用这条对话")
         bind.setObjectName("primary")
         bind.setIcon(icon("check", self.theme.primary_text))
         picker.body.addWidget(bind)
@@ -582,16 +630,16 @@ class PointerController(QObject):
             rows_cache[:] = rows
             listing.clear()
             for thread in rows:
-                item = QListWidgetItem((thread.title or thread.preview or "未命名对话").replace("\n", " ")[:80] + "\n" + thread.cwd)
+                item = QListWidgetItem((thread.title or thread.preview or tr("未命名对话")).replace("\n", " ")[:80] + "\n" + thread.cwd)
                 item.setData(Qt.ItemDataRole.UserRole, thread)
                 item.setSizeHint(QSize(390, 56))
                 item.setToolTip(thread.id)
                 item.setIcon(icon("chat", self.theme.muted, 20))
                 listing.addItem(item)
-            info.setText("选择你要继续的对话；不会自动猜测当前打开的是哪条。")
+            translated(info, "选择你要继续的对话；不会自动猜测当前打开的是哪条。")
         def load_error(error):
             if self.picker is picker and picker.isVisible():
-                info.setText(f"列表暂不可用，可粘贴对话 UUID。{error}")
+                translated(info, "列表暂不可用，可粘贴对话 UUID。{error}", error=error)
         def filter_rows(text):
             for i in range(listing.count()):
                 listing.item(i).setHidden(text.casefold() not in listing.item(i).text().casefold())
@@ -607,7 +655,7 @@ class PointerController(QObject):
             try:
                 identifier = str(uuid.UUID(manual.text().strip()))
             except ValueError:
-                info.setText("请选择对话，或填写完整的会话 UUID。")
+                translated(info, "请选择对话，或填写完整的会话 UUID。")
                 return
             row = next((r for r in rows_cache if r.id == identifier), None)
             title = (row.title or row.preview) if row else identifier
@@ -628,19 +676,19 @@ class PointerController(QObject):
     def show_details_menu(self):
         menu = QMenu(self.panel)
         self.add_recent_menu(menu)
-        scope = menu.addMenu("截图范围")
+        scope = menu.addMenu(tr("截图范围"))
         scope.setIcon(icon("scan", self.theme.muted))
-        for label, value in [("目标窗口", "window"), ("鼠标周边 640 × 480", "nearby")]:
+        for label, value in [(tr("目标窗口"), "window"), (tr("鼠标周边 640 × 480"), "nearby")]:
             action = scope.addAction(icon("window" if value == "window" else "scan", self.theme.muted), label)
             action.setCheckable(True)
             action.setChecked(self.image_scope == value)
             action.triggered.connect(lambda _, value=value: self.set_scope(value))
-        menu.addAction(icon("info", self.theme.muted), "查看目标与任务", self.show_context)
+        menu.addAction(icon("info", self.theme.muted), tr("查看目标与任务"), self.show_context)
         menu.addSeparator()
-        menu.addAction(icon("activity", self.theme.muted), "检查 Codex 连接", self.diagnose)
-        direct = menu.addAction(icon("arrow-up-right", self.theme.muted), "直接创建并发送（实验）", lambda: self.execute("direct_new"))
+        menu.addAction(icon("activity", self.theme.muted), tr("检查 Codex 连接"), self.diagnose)
+        direct = menu.addAction(icon("arrow-up-right", self.theme.muted), tr("直接创建并发送（实验）"), lambda: self.execute("direct_new"))
         direct.setEnabled(self.shared_ready and self.mode == "new")
-        motion = menu.addAction(icon("motion", self.theme.muted), "减少动态效果")
+        motion = menu.addAction(icon("motion", self.theme.muted), tr("减少动态效果"))
         motion.setCheckable(True)
         motion.setChecked(self.reduced_motion)
         motion.triggered.connect(self.set_reduced_motion)
@@ -661,15 +709,15 @@ class PointerController(QObject):
 
     def show_context(self):
         view = QDialog(self.panel)
-        view.setWindowTitle("目标与任务")
+        translated(view, "目标与任务", "setWindowTitle")
         view.resize(610, 460)
         layout = QVBoxLayout(view)
         text = QPlainTextEdit()
         text.setReadOnly(True)
         if self.target:
-            text.setPlainText("用户任务：\n" + self.panel.editor.toPlainText() + "\n\n目标：\n" + json.dumps(asdict(self.target), ensure_ascii=False, indent=2))
+            text.setPlainText(tr("用户任务：\n") + self.panel.editor.toPlainText() + tr("\n\n目标：\n") + json.dumps(asdict(self.target), ensure_ascii=False, indent=2))
         else:
-            text.setPlainText("尚未选择目标")
+            text.setPlainText(tr("尚未选择目标"))
         layout.addWidget(text)
         view.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         view.show()
@@ -679,21 +727,21 @@ class PointerController(QObject):
         def done(result):
             self.shared_ready = result.get("shared_available", False)
             self.panel.show_notice("共享服务已连接，可在菜单中直接创建并发送。" if self.shared_ready else "直接发送服务暂未连接。新对话可使用桌面预填入口。")
-        self.run_worker(self.bridge.diagnostics, done, lambda e: self.panel.show_notice(f"连接检查未完成：{e}"))
+        self.run_worker(self.bridge.diagnostics, done, lambda e: self.panel.show_notice("连接检查未完成：{error}", error=e))
 
     def button_menu(self, point):
         menu = QMenu()
-        menu.addAction(icon("folder-open", self.theme.muted), "选择文件夹…", self.choose_folder)
+        menu.addAction(icon("folder-open", self.theme.muted), tr("选择文件夹…"), self.choose_folder)
         self.add_recent_menu(menu)
-        menu.addAction(icon("panel", self.theme.muted), "打开任务面板", self.open_panel)
-        menu.addAction(icon("eye-off", self.theme.muted), "隐藏按钮", self.hide_button)
+        menu.addAction(icon("panel", self.theme.muted), tr("打开任务面板"), self.open_panel)
+        menu.addAction(icon("eye-off", self.theme.muted), tr("隐藏按钮"), self.hide_button)
         menu.addSeparator()
-        menu.addAction(icon("logout", self.theme.muted), "退出 Codex Pointer", self.quit)
+        menu.addAction(icon("logout", self.theme.muted), tr("退出 Codex Pointer"), self.quit)
         menu.exec(point)
 
     def add_recent_menu(self, menu):
         rows = [row for row in recent_targets(self.settings) if row["kind"] in ("folder", "file") and row.get("path")]
-        recent = menu.addMenu("最近对象")
+        recent = menu.addMenu(tr("最近对象"))
         recent.setIcon(icon("history", self.theme.muted))
         recent.setEnabled(bool(rows) and not self.busy)
         for row in rows:
@@ -771,7 +819,7 @@ class PointerController(QObject):
         except Exception as exc:
             self.set_busy(False)
             if self.panel:
-                self.panel.show_notice(f"界面更新未完成：{exc}")
+                self.panel.show_notice("界面更新未完成：{error}", error=exc)
 
     def quit(self):
         if not self.busy:
@@ -784,6 +832,7 @@ class PointerController(QObject):
         self._closing = True
         self.clear_lookup_queue()
         self.drag_timer.stop()
+        self.language_timer.stop()
         self.position_save_timer.stop()
         self.application.removeEventFilter(self)
         if hasattr(self, "tracker"):
@@ -806,10 +855,10 @@ class PointerController(QObject):
 
 
 def demo_target():
-    return TargetContext(kind="folder", title="项目资料", path="D:/Projects/项目资料", source="preview", point=(0, 0))
+    return TargetContext(kind="folder", title=tr("项目资料"), path=tr("D:/Projects/项目资料"), source="preview", point=(0, 0))
 
 
-def run(smoke_test=False, *, preview=False, theme=None, render_path=None):
+def run(smoke_test=False, *, preview=False, theme=None, render_path=None, language=None):
     mutex = None
     kernel = None
     live = sys.platform == "win32" and not (smoke_test or render_path or preview)
@@ -830,13 +879,13 @@ def run(smoke_test=False, *, preview=False, theme=None, render_path=None):
                 pass  # An older instance needs to be quit by the user.
             return
     try:
-        _run_gui(smoke_test, preview=preview, theme=theme, render_path=render_path, live=live)
+        _run_gui(smoke_test, preview=preview, theme=theme, render_path=render_path, live=live, language=language)
     finally:
         if mutex:
             kernel.CloseHandle(mutex)
 
 
-def _run_gui(smoke_test=False, *, preview=False, theme=None, render_path=None, live=False):
+def _run_gui(smoke_test=False, *, preview=False, theme=None, render_path=None, live=False, language=None):
     if smoke_test or render_path:
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     application = QApplication.instance() or QApplication(sys.argv[:1])
@@ -847,7 +896,8 @@ def _run_gui(smoke_test=False, *, preview=False, theme=None, render_path=None, l
     if application.platformName() == "offscreen" and sys.platform == "win32":
         for name in ["segoeui.ttf", "seguisb.ttf", "msyh.ttc"]:
             QFontDatabase.addApplicationFont(str(Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts" / name))
-    controller = PointerController(application, preview=preview or smoke_test or bool(render_path), theme=theme)
+    controller = PointerController(application, preview=preview or smoke_test or bool(render_path),
+                                   theme=theme, language=language)
     application.setWindowIcon(QIcon(str(Path(__file__).parent / "assets" / "pointer.ico")))
     controller.button.show()
     if live:
@@ -862,7 +912,7 @@ def _run_gui(smoke_test=False, *, preview=False, theme=None, render_path=None, l
         path = Path(render_path).resolve()
         path.parent.mkdir(parents=True, exist_ok=True)
         if not controller.panel.grab().save(str(path)):
-            raise RuntimeError("无法保存界面预览。")
+            raise RuntimeError(tr("无法保存界面预览。"))
         controller.panel.close()
         controller.button.close()
         return

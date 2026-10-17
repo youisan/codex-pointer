@@ -18,6 +18,7 @@ from PySide6.QtGui import QColor, QCursor, QFont, QPainter, QPen
 from PySide6.QtWidgets import QApplication, QWidget
 
 from .ui import Theme, icon
+from .i18n import tr
 
 
 @dataclass(frozen=True)
@@ -156,16 +157,19 @@ class TargetPreview(QWidget):
     def __init__(self, theme: Theme, reduced_motion: bool = False):
         super().__init__(None, _OVERLAY_FLAGS)
         _configure_overlay(self)
-        self.setAccessibleName("Codex Pointer 目标预览")
+        self.setAccessibleName(tr("Codex Pointer 目标预览"))
         self.setFixedSize(316, 88)
         self._theme = theme
         self.reduced_motion = reduced_motion
         self._mappings: list[ScreenMapping] | None = None
         self._outlines: list[_TargetOutline] = []
-        self._title = "正在识别目标…"
-        self._tag = "选择对象"
+        self._context = None
+        self._resolving = True
+        self._fallback_text = ""
+        self._title = tr("正在识别目标…")
+        self._tag = tr("选择对象")
         self._glyph = "target"
-        self._detail = "松开选择 · Esc 取消"
+        self._detail = tr("松开选择 · Esc 取消")
         application = QApplication.instance()
         if application is not None:
             application.screenAdded.connect(self._invalidate_screens)
@@ -192,32 +196,44 @@ class TargetPreview(QWidget):
     def show_context(self, context, cursor: QPoint | None = None, resolving: bool = False,
                      fallback_text: str = "") -> None:
         cursor = cursor if cursor is not None else QCursor.pos()
+        self._context, self._resolving, self._fallback_text = context, resolving, fallback_text
+        self._refresh_labels()
+        self._show_outline(getattr(context, "rect", (0, 0, 0, 0)))
+        self.move_near(cursor)
+        self.show()
+        self.update()
+
+    def retranslate_ui(self) -> None:
+        """Update labels without showing a hidden preview or querying a target."""
+        self.setAccessibleName(tr("Codex Pointer 目标预览"))
+        self.setWindowTitle(tr("Codex Pointer 目标预览"))
+        self._refresh_labels()
+        self.update()
+
+    def _refresh_labels(self) -> None:
+        context, resolving, fallback_text = self._context, self._resolving, self._fallback_text
         path = getattr(context, "path", None)
         kind = getattr(context, "kind", "window")
         verified_path = bool(path and kind in ("folder", "file"))
         if verified_path:
             self._glyph = kind
-            self._tag = "当前文件夹" if getattr(context, "source", "") == "explorer-current-folder" else (
-                "文件夹" if kind == "folder" else "文件")
+            self._tag = tr("当前文件夹") if getattr(context, "source", "") == "explorer-current-folder" else (
+                tr("文件夹") if kind == "folder" else tr("文件"))
             self._title = ntpath.basename(str(path).rstrip("/\\")) or str(path)
         else:
             self._glyph = "window" if context is not None else "scan"
-            self._tag = "窗口" if context is not None else "选择对象"
+            self._tag = tr("窗口") if context is not None else tr("选择对象")
             self._title = (getattr(context, "title", "") or getattr(context, "process_name", "") or
-                           ("正在识别目标…" if resolving else "移到窗口或文件夹上"))
+                           (tr("正在识别目标…") if resolving else tr("移到窗口或文件夹上")))
         if fallback_text:
-            self._detail = fallback_text
+            self._detail = tr(fallback_text)
         elif resolving:
-            self._detail = "正在确认对象 · Esc 取消"
+            self._detail = tr("正在确认对象 · Esc 取消")
         elif verified_path:
-            self._detail = "所在窗口已高亮 · 松开选择 · Esc 取消"
+            self._detail = tr("所在窗口已高亮 · 松开选择 · Esc 取消")
         else:
-            self._detail = "松开选择 · Esc 取消"
+            self._detail = tr("松开选择 · Esc 取消")
         self.setToolTip(self._title)
-        self._show_outline(getattr(context, "rect", (0, 0, 0, 0)))
-        self.move_near(cursor)
-        self.show()
-        self.update()
 
     show_target = show_context
 
