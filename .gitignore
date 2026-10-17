@@ -6,6 +6,7 @@ __pycache__/
 build/
 dist/
 .dev/
+.playwright-mcp/
 plugins/**/bin/
 *.spec
 .DS_Store
