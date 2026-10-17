@@ -324,8 +324,11 @@ class PointerController(QObject):
     def capture_recent(self):
         if self.busy:
             return
-        if self.panel and self.panel.isVisible():
-            self.panel.close()
+        if self.panel:
+            if self.panel.isVisible():
+                self.panel.close()
+            else:
+                self.open_panel()
             return
         if self.preview:
             self.open_panel()
@@ -346,14 +349,14 @@ class PointerController(QObject):
         if self.busy:
             return
         point = (0, 0) if self.preview else get_cursor_position()
-        self.capture(lambda: demo_target() if self.preview else capture_target(*point, enrich=False))
+        self.capture(lambda: demo_target() if self.preview else capture_target(*point, enrich=False), show_panel=False)
 
     def capture_dropped_path(self, path):
         if self.busy:
             return
-        self.capture(lambda: target_from_path(path), channel="enrich")
+        self.capture(lambda: target_from_path(path), channel="enrich", show_panel=False)
 
-    def capture(self, work, *, channel="fast"):
+    def capture(self, work, *, channel="fast", show_panel=True):
         if self.busy:
             return
         self.cancel_selection()
@@ -366,7 +369,7 @@ class PointerController(QObject):
         if self.picker:
             self.picker.close()
         self.button.set_busy(True)
-        self.open_panel()
+        self.open_panel(reveal=show_panel)
         self.panel.show_notice("")
         def current():
             return not self._closing and revision == self._selection_revision
@@ -418,10 +421,15 @@ class PointerController(QObject):
         self.persist()
         self.panel.set_mode(mode)
 
-    def open_panel(self):
+    def open_panel(self, *, reveal=True):
         if not self.panel:
             self.panel = TaskPanel(self)
         self.panel.refresh_target()
+        if not reveal:
+            if self.panel.isVisible():
+                self.draft = self.panel.editor.toPlainText()
+                self.panel.hide()
+            return
         if not self.panel.isVisible():
             self.panel.editor.setPlainText(self.draft)
             self.panel.reveal(self.button.geometry())

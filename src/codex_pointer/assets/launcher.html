@@ -81,7 +81,7 @@
         <button id="hide" class="action" type="button" disabled><svg data-pointer-icon="eye-off" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4 L20 20 M8.3 6.3 C9.5 5.8 10.7 5.5 12 5.5 C15.7 5.5 18.8 7.6 21.2 12 C20.4 13.4 19.5 14.6 18.5 15.6 M14.1 18.2 C13.4 18.4 12.7 18.5 12 18.5 C8.3 18.5 5.2 16.4 2.8 12 C3.7 10.4 4.7 9.1 5.8 8.1 M10 9.8 C8.9 10.8 8.8 12.7 10 14 C11.2 15.2 13.1 15.1 14.2 14"/></svg><span data-i18n="隐藏按钮">隐藏按钮</span></button>
       </div>
     </section>
-    <p class="hint"><svg data-pointer-icon="cursor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 L18 13.3 L12.7 14 L10.2 20.3 Z"/></svg><span data-i18n="拖到目标窗口或文件夹，松开后写下需求。">拖到目标窗口或文件夹，松开后写下需求。</span></p>
+    <p class="hint"><svg data-pointer-icon="cursor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 L18 13.3 L12.7 14 L10.2 20.3 Z"/></svg><span data-i18n="拖动选择对象，再点击圆圈写下需求。">拖动选择对象，再点击圆圈写下需求。</span></p>
     <p class="footnote" data-i18n="隐藏后，随时可以从这里再次唤起。">隐藏后，随时可以从这里再次唤起。</p>
   </main>
   <script>
@@ -116,7 +116,7 @@
         "已请求隐藏": "Hide requested",
         "当前客户端未提供插件工具连接。": "The current client does not provide a plugin tool connection.",
         "悬浮按钮控制": "Floating button controls",
-        "拖到目标窗口或文件夹，松开后写下需求。": "Drag onto a window or folder, release, then describe your task.",
+        "拖动选择对象，再点击圆圈写下需求。": "Drag to select a target, then click the circle to write a task.",
         "插件尚未连接，请刷新后重试。": "The plugin is not connected. Refresh and try again.",
         "插件返回了无效响应，请刷新状态。": "The plugin returned an invalid response. Refresh the status.",
         "操作未完成": "Action not completed",
@@ -226,7 +226,7 @@
           if (parentWindow !== window) {
             try {
               const result = await request("ui/initialize", {
-                appInfo: { name: "Codex Pointer", version: "0.6.0" },
+                appInfo: { name: "Codex Pointer", version: "0.6.1" },
                 appCapabilities: { availableDisplayModes: ["inline", "fullscreen"] },
                 protocolVersion: VERSION
               }, 4500);

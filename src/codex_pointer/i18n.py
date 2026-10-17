@@ -14,6 +14,7 @@ SUPPORTED_LANGUAGES = ("zh-CN", "en-US")
 _language = "zh-CN"
 
 _ENGLISH = {
+    "拖动选择对象，再点击圆圈写下需求。": "Drag to select a target, then click the circle to write a task.",
     "Pointer 状态": "Pointer status",
     "显示 Pointer 按钮": "Show Pointer button",
     "隐藏 Pointer 按钮": "Hide Pointer button",

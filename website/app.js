@@ -48,10 +48,10 @@
       howIntro: "Keep your focus. Let the context come with you.",
       stepOneTitle: "Point to your target",
       stepOneBody:
-        "Drag the floating button onto a window or folder. Or drop a single local file onto it.",
+        "Drag the button onto a window or folder, or drop one local file or folder onto it. Release to select; the panel stays closed.",
       stepTwoTitle: "Say what you need",
       stepTwoBody:
-        "Choose a new or linked chat. Write a task, or start with a shortcut.",
+        "Click the circle to open your selected target. Choose a chat and write a task, or use a shortcut. Click again to collapse.",
       stepThreeTitle: "Continue in Codex",
       stepThreeBody:
         "For a new chat, review and send the draft in Codex. For a linked chat, submit explicitly in Pointer to queue the task.",
@@ -119,8 +119,10 @@
       shortcutAdded: "Added to your draft. Nothing was sent.",
       shortcutDuplicate: "This shortcut is already in your draft.",
       contextChanged: "Target changed. Your existing draft was kept.",
+      targetSelected:
+        "Example target selected. Click the circle to open or collapse the panel; your target and draft stay in place.",
       dropNote:
-        "This website does not read files. Drop one local file or folder onto the installed desktop button.",
+        "This website does not read files. On the desktop, dropping one file or folder selects it and keeps the panel closed. Click the circle to open it.",
       metaDescription:
         "A small Windows button that brings your selected window, folder or file into Codex. Independent, free and open source.",
     },
@@ -169,9 +171,10 @@
       howIntro: "专注手头的事，把上下文交给小按钮。",
       stepOneTitle: "指向你要处理的对象",
       stepOneBody:
-        "把浮动按钮拖到窗口或文件夹上。也能把一个本地文件拖到按钮上。",
+        "把按钮拖到窗口或文件夹上，或把一个本地文件、文件夹拖到按钮上。松开只选中目标，面板保持收起。",
       stepTwoTitle: "写下你想做什么",
-      stepTwoBody: "选择新对话或已绑定对话。输入需求，也能从快捷任务开始。",
+      stepTwoBody:
+        "点击圆圈展开已选目标，选择对话、输入需求，或使用快捷任务。再次点击圆圈收起面板。",
       stepThreeTitle: "确认后，继续处理",
       stepThreeBody:
         "新对话需在 Codex 中检查并发送草稿；已绑定对话则在 Pointer 明确提交后，把任务加入该对话队列。",
@@ -232,8 +235,10 @@
       shortcutAdded: "已追加到草稿，没有发送。",
       shortcutDuplicate: "这条快捷任务已在草稿中。",
       contextChanged: "对象已切换，原有草稿已保留。",
+      targetSelected:
+        "示例对象已选中。点击圆圈展开或收起面板，目标和草稿会保留。",
       dropNote:
-        "此网页不读取文件。请把一个本地文件或文件夹拖到安装后的桌面按钮上。",
+        "此网页不读取文件。桌面按钮收到一个文件或文件夹后只选中目标、保持面板收起；点击圆圈再展开。",
       metaDescription:
         "用一个 Windows 浮动按钮，把选中的窗口、文件夹或文件带进 Codex 对话。独立、免费、开源。",
     },
@@ -524,8 +529,8 @@
     tab.addEventListener("click", () => {
       demoKind = tab.dataset.demoKind;
       updateDemoTarget();
-      setDemoStatus("demoNote");
-      showPanel(true);
+      setDemoStatus("targetSelected");
+      showPanel(false);
     });
     tab.addEventListener("keydown", (event) => {
       if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
@@ -548,8 +553,8 @@
     row.addEventListener("click", () => {
       demoFile = row.dataset.demoFile;
       updateDemoTarget();
-      showPanel(true);
-      setDemoStatus("demoNote");
+      showPanel(false);
+      setDemoStatus("targetSelected");
     }),
   );
   $("#demo-pointer").addEventListener("click", () =>
@@ -563,8 +568,8 @@
   $("#select-target").addEventListener("click", () => {
     demoKind = demoKind === "folder" ? "window" : "folder";
     updateDemoTarget();
-    showPanel(true);
-    setDemoStatus("demoNote");
+    showPanel(false);
+    setDemoStatus("targetSelected");
   });
   function updateChatMode() {
     $$("[data-chat]").forEach((tab) => {

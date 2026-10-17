@@ -4,7 +4,7 @@
 
 A small Windows companion that brings a window, file, or folder into your Codex chat.
 
-Drag the floating circle onto a target, or drop a file onto the circle. Choose a task and continue in a new or explicitly selected chat. A compact native interface, local context capture, and fewer trips between windows.
+Drag the floating circle onto a target, or drop a file or folder onto the circle. This selects the target and keeps the panel closed. Click the circle to open it, then choose a task and continue in a new or explicitly selected chat. A compact native interface, local context capture, and fewer trips between windows.
 
 | Light | Dark |
 | --- | --- |
@@ -12,7 +12,7 @@ Drag the floating circle onto a target, or drop a file onto the circle. Choose a
 
 These previews are rendered from the real Qt interface with synthetic targets; they do not capture a desktop or send a task.
 
-**v0.6.0 is a Windows preview.** This community project is not affiliated with OpenAI. Pointer selects context; the tools available in your Codex chat perform the work. It does not install a universal desktop-control engine.
+**v0.6.1 is a Windows preview.** This community project is not affiliated with OpenAI. Pointer selects context; the tools available in your Codex chat perform the work. It does not install a universal desktop-control engine.
 
 ## What it does
 
@@ -22,13 +22,13 @@ These previews are rendered from the real Qt interface with synthetic targets; t
 - Use target-specific quick tasks. A click fills the composer; existing text is preserved, repeated clicks are deduplicated, and nothing is sent automatically.
 - Start a new chat or explicitly select an existing one. Folder and application bindings are remembered independently; a new target never inherits the previous target's chat.
 - Reopen recent files and folders, use an optional screenshot preview, and switch between light and dark themes.
-- Click the circle again to collapse the panel without losing the current draft. Target lookup stays in the background and ignores stale results.
+- Click the circle to open or collapse the selected target's panel without losing the current draft or selecting another window. Dragging or dropping a new target collapses the panel; target lookup stays in the background and ignores stale results.
 
 ## Install
 
 Requires **Windows 10/11 x64** and an installed, signed-in Codex desktop client with its native CLI. No separate Python installation is needed for the release ZIP.
 
-1. Download `codex-pointer-0.6.0-windows-x64.zip` from the [latest release](https://github.com/youisan/codex-pointer/releases/latest) and extract it. Keep the complete folder, including the GUI's `_internal` directory.
+1. Download `codex-pointer-0.6.1-windows-x64.zip` from the [latest release](https://github.com/youisan/codex-pointer/releases/latest) and extract it. Keep the complete folder, including the GUI's `_internal` directory.
 2. Open the extracted `codex-pointer` folder in Codex, or open a terminal in that folder and run:
 
    ```powershell
@@ -44,8 +44,8 @@ When upgrading, quit the old circle through its context menu before opening the 
 
 ## Use
 
-1. Select a target by dragging the circle onto it, dropping a file onto the circle, or choosing a folder from the context menu.
-2. Write a request or select a quick task. Screenshots are **off by default**; opt in and preview the exact image before submitting.
+1. Drag the circle onto a target, or drop one file or folder onto the circle. Releasing selects the target and keeps the panel closed. You can also choose a folder from the context menu.
+2. Click the circle to open the selected target's panel, then write a request or select a quick task. Click the circle again to collapse it; the target and draft are preserved. Screenshots are **off by default**; opt in and preview the exact image before submitting.
 3. Choose **New chat** to open a prefilled Codex draft, then confirm sending inside Codex. For **Continue chat**, explicitly select a conversation first.
 
 `Ctrl+Alt+Space` selects the recently focused external app when the shortcut is available. `Ctrl+Enter` triggers the panel's primary action. `Esc` closes an idle panel or cancels an active drag. Native controls and built-in quick tasks follow Codex's language, with English and Simplified Chinese support. Other Codex languages use English. Your own task text is preserved when the language changes.
@@ -75,7 +75,7 @@ python scripts/benchmark_switching.py
 python scripts/render_readme_previews.py
 ```
 
-Builds go to `dist/v0.6.0/`: the standalone GUI, MCP host, complete plugin ZIP, SHA256 checksums, and license notices. Source checkouts do not include binaries; build before installing the plugin from source.
+Builds go to `dist/v0.6.1/`: the standalone GUI, MCP host, complete plugin ZIP, SHA256 checksums, and license notices. Source checkouts do not include binaries; build before installing the plugin from source.
 
 Tests use synthetic contexts and owned/offscreen UI. Release verification installs the ZIP in an isolated Codex home to check real plugin discovery, relative executable paths, and global launcher metadata. It does not submit a model task or inspect your screen. The responsiveness benchmark simulates a 600ms lookup; it does not measure complete real-world Explorer latency.
 
