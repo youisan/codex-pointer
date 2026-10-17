@@ -1,0 +1,10 @@
+{
+  "name": "codex-pointer-local",
+  "interface": {"displayName": "Codex Pointer"},
+  "plugins": [{
+    "name": "codex-pointer",
+    "source": {"source": "local", "path": "./plugins/codex-pointer"},
+    "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+    "category": "Productivity"
+  }]
+}

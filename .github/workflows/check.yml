@@ -1,0 +1,24 @@
+name: Check
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install GUI runtime
+        run: python -m pip install -e .
+      - name: Unit tests (no live Codex requests)
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $env:PYTHONPATH = 'src'
+          python -m unittest discover -s tests -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build smoke check
+        run: python -m compileall -q src mcp_host.py

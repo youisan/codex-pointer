@@ -1,0 +1,39 @@
+name: Build Windows preview
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install build and GUI dependencies
+        run: python -m pip install -e . pyinstaller
+      - name: Tests
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $env:PYTHONPATH = 'src'
+          python -m unittest discover -s tests -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build
+        shell: pwsh
+        run: ./scripts/build.ps1
+      - name: Verify frozen release
+        run: python scripts/verify_release.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codex-pointer-windows-preview
+          path: |
+            dist/v*/*.exe
+            dist/v*/*.zip
+            dist/v*/SHA256SUMS.txt
+            dist/v*/THIRD_PARTY_NOTICES.txt
+            dist/v*/THIRD_PARTY_LICENSES/

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light dark">
+  <title>Codex Pointer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #fff; --surface: #f9f9f9; --hover: #ededed;
+      --ink: #181818; --muted: #666; --line: #e8e8e8;
+      --inverse: #fff; --danger: #b43a3a;
+      font-family: var(--font-sans, "Segoe UI", "Microsoft YaHei UI", sans-serif);
+      font-synthesis: none; text-rendering: optimizeLegibility;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #181818; --surface: #212121; --hover: #303030;
+      --ink: #ededed; --muted: #aaa; --line: #333;
+      --inverse: #181818; --danger: #f39a9a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--color-background-primary, var(--page)); color: var(--color-text-primary, var(--ink)); }
+    button { font: inherit; -webkit-tap-highlight-color: transparent; }
+    button:focus-visible { outline: 2px solid var(--color-ring-primary, var(--ink)); outline-offset: 4px; }
+    button:disabled { cursor: default; opacity: .42; transform: none; }
+    button:not(:disabled) { cursor: pointer; }
+    svg { display: block; flex: 0 0 auto; }
+    .shell { width: 100%; max-width: 620px; margin: 0 auto; padding: clamp(24px, 7vw, 56px) clamp(20px, 6vw, 48px); }
+    .masthead { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .eyebrow { font-size: 12px; letter-spacing: .1em; font-weight: 600; color: var(--color-text-secondary, var(--muted)); }
+    .refresh { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; color: var(--color-text-secondary, var(--muted)); transition: background 160ms, color 160ms; }
+    .refresh:hover:not(:disabled) { background: var(--color-background-secondary, var(--hover)); color: var(--color-text-primary, var(--ink)); }
+    .intro { padding: 38px 0 29px; }
+    .mark { position: relative; display: grid; place-items: center; width: 58px; height: 58px; margin-bottom: 24px; border: 1px solid var(--color-border-primary, var(--line)); border-radius: 18px; background: var(--color-background-secondary, var(--surface)); transition: transform 220ms; }
+    .mark:hover { transform: translateY(-3px) rotate(-5deg); }
+
+    h1 { margin: 0 0 10px; font-size: clamp(26px, 5vw, 32px); font-weight: 600; letter-spacing: -.04em; line-height: 1.2; }
+    .subtitle { margin: 0; color: var(--color-text-secondary, var(--muted)); font-size: 14px; line-height: 1.85; }
+    .control { padding: 20px; border: 1px solid var(--color-border-primary, var(--line)); border-radius: 18px; background: var(--color-background-secondary, var(--surface)); }
+    .state-row { display: flex; align-items: center; gap: 9px; min-height: 22px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .4; flex-shrink: 0; }
+    .state-text { font-size: 13px; font-weight: 500; }
+    .control[data-busy="true"] .dot { animation: breathe 1.2s ease-in-out infinite; }
+    .control[data-error="true"] .state-row { color: var(--color-text-danger, var(--danger)); }
+    .message { min-height: 40px; margin: 9px 0 19px; color: var(--color-text-secondary, var(--muted)); font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .action { display: flex; justify-content: center; align-items: center; gap: 8px; min-height: 43px; padding: 10px 15px; border-radius: 24px; border: 1px solid var(--color-border-primary, var(--line)); background: transparent; color: var(--color-text-primary, var(--ink)); font-size: 13px; font-weight: 500; transition: transform 160ms, background 160ms, opacity 160ms; }
+    .action:hover:not(:disabled) { background: var(--color-background-tertiary, var(--hover)); transform: translateY(-1px); }
+    .action:active:not(:disabled) { transform: scale(.975); }
+    .primary { border-color: transparent; background: var(--color-text-primary, var(--ink)); color: var(--color-background-primary, var(--inverse)); }
+    .primary:hover:not(:disabled) { background: var(--color-text-primary, var(--ink)); opacity: .85; }
+    .hint { display: flex; align-items: flex-start; gap: 9px; margin: 19px 3px 0; font-size: 12px; line-height: 1.8; color: var(--color-text-secondary, var(--muted)); }
+    .hint svg { margin-top: 3px; opacity: .7; }
+    .footnote { margin: 28px 0 0; font-size: 11px; line-height: 1.7; color: var(--color-text-tertiary, var(--muted)); opacity: .8; }
+    @keyframes breathe { 50% { opacity: 1; } }
+    @media (max-width: 320px) { .shell { padding: 20px 16px; } .intro { padding-top: 24px; } .control { padding: 16px; } .actions { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <span class="eyebrow">CODEX POINTER</span>
+      <button id="refresh" class="refresh" type="button" title="刷新状态" aria-label="刷新状态" disabled>
+        <svg data-pointer-icon="refresh" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M19.2 9 C18 5.7 14.5 3.8 11 4.5 C7.5 5.2 5 8.3 5 11.8 M19.2 4.7 L19.2 9 L14.9 9 M4.8 15 C6 18.3 9.5 20.2 13 19.5 C16.5 18.8 19 15.7 19 12.2 M4.8 19.3 L4.8 15 L9.1 15"/></svg>
+      </button>
+    </header>
+    <section class="intro" aria-labelledby="title">
+      <div class="mark" aria-hidden="true"><svg data-pointer-icon="target" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3.5 L5.5 3.5 Q3.5 3.5 3.5 5.5 L3.5 8 M16 3.5 L18.5 3.5 Q20.5 3.5 20.5 5.5 L20.5 8 M3.5 16 L3.5 18.5 Q3.5 20.5 5.5 20.5 L8 20.5 M20.5 16 L20.5 18.5 Q20.5 20.5 18.5 20.5 L16 20.5"/><path d="M8.8 7.3 L17.7 14.4 L13.5 15 L11.6 19 Z"/></svg></div>
+      <h1 id="title">从眼前，开始对话。</h1>
+      <p class="subtitle">一个小按钮，把窗口与文件夹<br>带进 Codex 的上下文。</p>
+    </section>
+    <section id="control" class="control" data-busy="true" aria-label="悬浮按钮控制">
+      <div class="state-row" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="status" class="state-text">正在连接</span></div>
+      <p id="message" class="message" aria-live="polite">正在读取悬浮按钮状态。</p>
+      <div class="actions">
+        <button id="show" class="action primary" type="button" disabled><svg data-pointer-icon="eye" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 12 C5.2 7.6 8.3 5.5 12 5.5 C15.7 5.5 18.8 7.6 21.2 12 C18.8 16.4 15.7 18.5 12 18.5 C8.3 18.5 5.2 16.4 2.8 12 Z"/><circle cx="12" cy="12" r="3"/></svg>显示按钮</button>
+        <button id="hide" class="action" type="button" disabled><svg data-pointer-icon="eye-off" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4 L20 20 M8.3 6.3 C9.5 5.8 10.7 5.5 12 5.5 C15.7 5.5 18.8 7.6 21.2 12 C20.4 13.4 19.5 14.6 18.5 15.6 M14.1 18.2 C13.4 18.4 12.7 18.5 12 18.5 C8.3 18.5 5.2 16.4 2.8 12 C3.7 10.4 4.7 9.1 5.8 8.1 M10 9.8 C8.9 10.8 8.8 12.7 10 14 C11.2 15.2 13.1 15.1 14.2 14"/></svg>隐藏按钮</button>
+      </div>
+    </section>
+    <p class="hint"><svg data-pointer-icon="cursor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 L18 13.3 L12.7 14 L10.2 20.3 Z"/></svg><span>拖到目标窗口或文件夹，松开后写下需求。</span></p>
+    <p class="footnote">隐藏后，随时可以从这里再次唤起。</p>
+  </main>
+  <script>
+    (() => {
+      "use strict";
+      const VERSION = "2026-01-26";
+      const TIMEOUT = 10000;
+      const elements = Object.fromEntries(["control", "status", "message", "show", "hide", "refresh"].map(id => [id, document.getElementById(id)]));
+      const parentWindow = window.parent;
+      const pending = new Map();
+      const mediaTheme = window.matchMedia("(prefers-color-scheme: dark)");
+      let nextId = 0, bridge = null, connecting = null, busy = false, disposed = false, hostTheme = null;
+      let lastStatus = null, mutationStarted = false;
+      let observer = null;
+
+      function theme(context = {}) {
+        if (context.theme === "dark" || context.theme === "light") hostTheme = context.theme;
+        document.documentElement.dataset.theme = hostTheme || (mediaTheme.matches ? "dark" : "light");
+        const variables = context.styles && context.styles.variables;
+        const allowed = /^(--color-(background|text|border|ring)-(primary|secondary|tertiary|inverse|danger)|--font-sans)$/;
+        if (variables && typeof variables === "object") {
+          for (const [key, value] of Object.entries(variables)) {
+            if (!allowed.test(key)) continue;
+            if (value == null) document.documentElement.style.removeProperty(key);
+            else if (typeof value === "string" && value.length < 300 && !/url\s*\(|@import|expression\s*\(|[<>]/i.test(value)) document.documentElement.style.setProperty(key, value);
+          }
+        }
+      }
+
+      function send(message) { parentWindow.postMessage(message, "*"); }
+      function notify(method, params = {}) { if (!disposed) send({ jsonrpc: "2.0", method, params }); }
+      function request(method, params, timeout = TIMEOUT) {
+        if (disposed) return Promise.reject(new Error("页面已关闭，请重新打开插件。"));
+        const id = "pointer-" + (++nextId);
+        return new Promise((resolve, reject) => {
+          const timer = setTimeout(() => {
+            pending.delete(id);
+            reject(new Error(method === "ui/initialize" ? "客户端连接超时。" : "请求超时，结果尚未确认。请刷新状态后再操作。"));
+          }, timeout);
+          pending.set(id, { resolve, reject, timer });
+          try { send({ jsonrpc: "2.0", id, method, params }); }
+          catch (error) { clearTimeout(timer); pending.delete(id); reject(error); }
+        });
+      }
+
+      function resize() {
+        if (bridge === "standard") notify("ui/notifications/size-changed", { height: Math.ceil(document.querySelector(".shell").getBoundingClientRect().height) });
+      }
+      function onMessage(event) {
+        if (event.source !== parentWindow || disposed) return;
+        const data = event.data;
+        if (!data || typeof data !== "object" || data.jsonrpc !== "2.0") return;
+        if (!data.method && pending.has(data.id)) {
+          const item = pending.get(data.id);
+          clearTimeout(item.timer); pending.delete(data.id);
+          if (data.error) item.reject(new Error(typeof data.error.message === "string" ? data.error.message : "客户端未能完成请求。"));
+          else if (Object.prototype.hasOwnProperty.call(data, "result")) item.resolve(data.result);
+          else item.reject(new Error("客户端返回了无效响应。"));
+          return;
+        }
+        if (data.method === "ping" && data.id != null) send({ jsonrpc: "2.0", id: data.id, result: {} });
+        else if (data.method === "ui/notifications/host-context-changed") theme(data.params || {});
+        else if (data.method === "ui/notifications/tool-result" && !busy && !mutationStarted) {
+          try { renderResult(data.params); } catch (error) { showError(error); }
+        } else if (data.method === "ui/resource-teardown" && data.id != null) {
+          send({ jsonrpc: "2.0", id: data.id, result: {} }); cleanup();
+        }
+      }
+
+      function compatibilityAvailable() { return typeof window.openai?.callTool === "function"; }
+      async function connect() {
+        if (bridge) return;
+        if (connecting) return connecting;
+        connecting = (async () => {
+          let standardError;
+          if (parentWindow !== window) {
+            try {
+              const result = await request("ui/initialize", {
+                appInfo: { name: "Codex Pointer", version: "0.5.0" },
+                appCapabilities: { availableDisplayModes: ["inline", "fullscreen"] },
+                protocolVersion: VERSION
+              }, 4500);
+              if (result?.protocolVersion !== VERSION) throw new Error("客户端使用了不兼容的界面协议。");
+              theme(result.hostContext || {});
+              notify("ui/notifications/initialized");
+              if (!result.hostCapabilities?.serverTools) throw new Error("当前客户端未提供插件工具连接。");
+              bridge = "standard";
+              resize();
+              return;
+            } catch (error) { standardError = error; }
+          }
+          if (compatibilityAvailable()) { bridge = "compatibility"; theme({ theme: window.openai.theme }); return; }
+          throw standardError || new Error("请从 Codex 的插件入口打开此页面。");
+        })();
+        try { await connecting; } finally { connecting = null; }
+      }
+
+      async function callTool(name) {
+        if (bridge === "standard") return request("tools/call", { name, arguments: {} });
+        if (bridge !== "compatibility" || !compatibilityAvailable()) throw new Error("插件尚未连接，请刷新后重试。");
+        // Select the transport before sending. Never retry a mutation on another transport.
+        let timer;
+        try {
+          return await Promise.race([
+            Promise.resolve().then(() => window.openai.callTool(name, {})),
+            new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("请求超时，结果尚未确认。请刷新状态后再操作。")), TIMEOUT); })
+          ]);
+        } finally { clearTimeout(timer); }
+      }
+
+      function updateControls() {
+        elements.control.dataset.busy = String(busy);
+        elements.control.setAttribute("aria-busy", String(busy));
+        elements.refresh.disabled = busy || disposed;
+        elements.show.disabled = busy || disposed || !bridge || !lastStatus || lastStatus.gui_available !== true;
+        elements.hide.disabled = busy || disposed || !bridge || lastStatus?.running !== true || lastStatus?.control_available !== true;
+      }
+      function setText(status, message, error = false) {
+        elements.status.textContent = status;
+        elements.message.textContent = message;
+        elements.control.dataset.error = String(error);
+      }
+      function resultMessage(result) {
+        const message = result?.structuredContent?.message;
+        if (typeof message === "string" && message) return message;
+        return Array.isArray(result?.content) ? result.content.filter(item => item?.type === "text" && typeof item.text === "string").map(item => item.text).join("\n") : "";
+      }
+      function renderResult(result) {
+        if (!result || typeof result !== "object") throw new Error("插件返回了无效响应，请刷新状态。");
+        if (result.isError === true) throw new Error(resultMessage(result) || "操作未完成，请刷新状态后重试。");
+        const status = result.structuredContent;
+        if (!status || typeof status.running !== "boolean" || typeof status.control_available !== "boolean" || typeof status.gui_available !== "boolean") throw new Error("未能确认悬浮按钮状态，请刷新后重试。");
+        lastStatus = status;
+        let title = status.running ? "已启动" : "尚未启动";
+        let message = status.running ? "可以显示按钮，或暂时将它隐藏。" : "显示悬浮按钮，开始选择你想操作的内容。";
+        if (status.status === "launch_requested") { title = "已请求启动"; message = "正在启动悬浮按钮。稍后可刷新状态。"; }
+        else if (status.status === "shown" || status.status === "show_requested") { title = "已请求显示"; message = "已发送显示请求，请在桌面查看悬浮按钮。"; }
+        else if (status.status === "hide_requested") { title = "已请求隐藏"; message = "已发送隐藏请求，随时可以从这里再次唤起。"; }
+        else if (!status.gui_available) { title = "暂不可用"; message = "请在装有 Codex Pointer 的 Windows 桌面使用。"; }
+        setText(title, resultMessage(result) || message);
+      }
+      function showError(error) {
+        setText("操作未完成", error instanceof Error ? error.message : "连接出现问题，请刷新状态。", true);
+      }
+      async function run(name) {
+        if (busy || disposed) return;
+        busy = true;
+        if (name !== "pointer_status") mutationStarted = true;
+        setText(name === "pointer_status" ? "正在读取状态" : name === "show_pointer" ? "正在请求显示" : "正在请求隐藏", "请稍候…");
+        updateControls();
+        try { await connect(); renderResult(await callTool(name)); }
+        catch (error) { showError(error); }
+        finally { busy = false; updateControls(); resize(); }
+      }
+      function onGlobals(event) { theme({ theme: event.detail?.globals?.theme }); }
+      function onMediaTheme() { theme(); }
+      function cleanup() {
+        disposed = true;
+        observer?.disconnect();
+        for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error("页面已关闭。")); }
+        pending.clear();
+        window.removeEventListener("message", onMessage);
+        window.removeEventListener("openai:set_globals", onGlobals);
+        mediaTheme.removeEventListener("change", onMediaTheme);
+        updateControls();
+      }
+
+      window.addEventListener("message", onMessage);
+      window.addEventListener("openai:set_globals", onGlobals);
+      window.addEventListener("pagehide", cleanup, { once: true });
+      mediaTheme.addEventListener("change", onMediaTheme);
+      if (typeof ResizeObserver === "function") { observer = new ResizeObserver(resize); observer.observe(document.querySelector(".shell")); }
+      elements.refresh.addEventListener("click", () => run("pointer_status"));
+      elements.show.addEventListener("click", () => run("show_pointer"));
+      elements.hide.addEventListener("click", () => run("hide_pointer"));
+      theme();
+      run("pointer_status");
+    })();
+  </script>
+</body>
+</html>
