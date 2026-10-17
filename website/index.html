@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="A small Windows button that brings your selected window, folder or file into Codex. Independent, free and open source."
+    />
+    <meta
+      property="og:title"
+      content="Codex Pointer — Point at it. Bring it to Codex."
+    />
+    <meta
+      property="og:description"
+      content="One small button. The context you choose. A shorter path to the conversation."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Codex Pointer — Point at it. Bring it to Codex.</title>
+    <link rel="icon" type="image/svg+xml" href="assets/pointer.svg" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="config.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
+    <header class="site-header shell">
+      <a href="#" class="brand" aria-label="Codex Pointer home"
+        ><img src="assets/pointer.svg" width="40" height="40" alt="" /><span
+          >Codex Pointer</span
+        ></a
+      >
+      <nav
+        class="main-nav"
+        aria-label="Main navigation"
+        data-i18n-aria="navLabel"
+      >
+        <a href="#how-it-works" data-i18n="navHow">How it works</a
+        ><a href="#features" data-i18n="navFeatures">Features</a
+        ><a href="#install" data-i18n="navInstall">Install</a>
+      </nav>
+      <div class="language-switch" role="group" aria-label="Language">
+        <button type="button" data-language="en" aria-pressed="true">EN</button
+        ><span aria-hidden="true">/</span
+        ><button type="button" data-language="zh" aria-pressed="false">
+          中文
+        </button>
+      </div>
+    </header>
+    <main id="main" tabindex="-1">
+      <section class="hero shell" aria-labelledby="hero-heading">
+        <div class="hero-copy">
+          <h1 id="hero-heading">
+            <span data-i18n="heroOne">Point at it.</span
+            ><span data-i18n="heroTwo">Bring it to Codex.</span>
+          </h1>
+          <p class="hero-description" data-i18n="heroBody">
+            Windows, folders, files. One small button to bring what you’re
+            working on into the conversation.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" data-link="download" href="#install"
+              ><span data-icon="download"></span
+              ><span data-i18n="download">Download for Windows</span></a
+            ><a class="text-link" data-link="repository" href="#install"
+              ><span data-i18n="github">View on GitHub</span
+              ><span data-icon="up-right"></span
+            ></a>
+          </div>
+          <p class="release-caption">
+            <span data-i18n="heroCaption"
+              >Windows preview · Free and open source</span
+            ><span class="version" data-version></span>
+          </p>
+          <p class="native-language" data-i18n="nativeLanguage">
+            Website demo: EN / 中文. Desktop interface: Chinese.
+          </p>
+        </div>
+        <div
+          class="demo-canvas"
+          aria-label="Interactive product preview"
+          data-i18n-aria="demoLabel"
+        >
+          <div
+            class="demo-tabs"
+            role="tablist"
+            aria-label="Example target"
+            data-i18n-aria="demoTabs"
+          >
+            <button
+              type="button"
+              id="folder-tab"
+              role="tab"
+              aria-selected="true"
+              aria-controls="demo-desktop"
+              tabindex="0"
+              data-demo-kind="folder"
+              data-i18n="folder"
+            >
+              Folder</button
+            ><button
+              type="button"
+              id="window-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="demo-desktop"
+              tabindex="-1"
+              data-demo-kind="window"
+              data-i18n="window"
+            >
+              Window
+            </button>
+          </div>
+          <div
+            class="desktop-preview"
+            id="demo-desktop"
+            role="tabpanel"
+            aria-labelledby="folder-tab"
+          >
+            <div class="explorer-toolbar">
+              <span class="toolbar-arrows" aria-hidden="true"
+                >← &nbsp; → &nbsp; ↑</span
+              ><span class="breadcrumb" data-i18n="breadcrumb"
+                >Projects / Research</span
+              ><span class="mock-search" data-i18n="search">Search</span>
+            </div>
+            <div id="folder-content" class="folder-content">
+              <div class="file-heading">
+                <span data-i18n="name">Name</span
+                ><span data-i18n="modified">Date modified</span
+                ><span data-i18n="type">Type</span>
+              </div>
+              <button
+                class="file-row"
+                type="button"
+                data-demo-file="brief"
+                aria-pressed="false"
+              >
+                <span data-icon="file"></span><span>Brief.md</span
+                ><time>2026/10/16</time
+                ><span class="file-type">Markdown</span></button
+              ><button
+                class="file-row is-selected"
+                type="button"
+                data-demo-file="sources"
+                aria-pressed="true"
+              >
+                <span data-icon="folder"></span><span>Sources</span
+                ><time>2026/10/16</time
+                ><span class="file-type" data-i18n="folder"
+                  >Folder</span
+                ></button
+              ><button
+                class="file-row"
+                type="button"
+                data-demo-file="notes"
+                aria-pressed="false"
+              >
+                <span data-icon="folder"></span><span>Notes</span
+                ><time>2026/10/15</time
+                ><span class="file-type" data-i18n="folder">Folder</span>
+              </button>
+            </div>
+            <div id="window-content" class="window-content" hidden>
+              <div class="output-title">
+                <span data-icon="window"></span
+                ><span data-i18n="buildOutput">Build output</span>
+              </div>
+              <pre><span class="code-muted">&gt; npm run build</span>
+
+Error: Cannot find module './config'
+  at src/main.ts:12:8</pre>
+              <p data-i18n="windowHint">
+                Bring the window context into your next question.
+              </p>
+            </div>
+            <button
+              type="button"
+              class="floating-pointer"
+              id="demo-pointer"
+              aria-expanded="true"
+              aria-controls="demo-panel"
+              aria-label="Toggle example panel"
+              data-i18n-aria="togglePanel"
+            >
+              <span data-icon="pointer"></span>
+            </button>
+            <section
+              class="demo-panel"
+              id="demo-panel"
+              aria-label="Example task panel"
+              data-i18n-aria="panelLabel"
+            >
+              <div class="panel-header">
+                <span>Codex Pointer</span
+                ><button
+                  type="button"
+                  class="icon-button"
+                  id="close-panel"
+                  aria-label="Close example panel"
+                  data-i18n-aria="closePanel"
+                >
+                  <span data-icon="close"></span>
+                </button>
+              </div>
+              <div class="panel-target">
+                <span data-icon="folder" id="demo-target-icon"></span>
+                <div>
+                  <strong id="demo-target-name">Sources</strong
+                  ><span id="demo-target-path"
+                    >D:/Projects/Research/Sources</span
+                  >
+                </div>
+              </div>
+              <div
+                class="chat-tabs"
+                role="group"
+                aria-label="Example conversation"
+                data-i18n-aria="chatChoice"
+              >
+                <button
+                  type="button"
+                  class="is-active"
+                  data-chat="new"
+                  aria-pressed="true"
+                  data-i18n="newChat"
+                >
+                  New chat</button
+                ><button
+                  type="button"
+                  data-chat="continue"
+                  aria-pressed="false"
+                  data-i18n="continueChat"
+                >
+                  Continue chat
+                </button>
+              </div>
+              <p class="linked-chat" id="linked-chat" hidden>
+                <span data-icon="chat"></span
+                ><span data-i18n="linkedChat">Linked: Research planning</span>
+              </p>
+              <label class="sr-only" for="demo-task" data-i18n="taskLabel"
+                >Example task</label
+              ><textarea id="demo-task" rows="2" spellcheck="false">
+Help me make sense of this folder.</textarea
+              ><label class="screenshot-option"
+                ><input type="checkbox" id="demo-screenshot" /><span
+                  data-i18n="includeScreenshot"
+                  >Include screenshot</span
+                ></label
+              ><button
+                class="button primary demo-continue"
+                id="demo-continue"
+                type="button"
+              >
+                <span data-i18n="continueInCodex">Continue in Codex</span
+                ><span data-icon="arrow"></span>
+              </button>
+            </section>
+          </div>
+          <div class="demo-controls">
+            <button class="button quiet" id="select-target" type="button">
+              <span data-icon="pointer"></span
+              ><span data-i18n="selectTarget">Select a target</span></button
+            ><button class="button quiet" id="open-panel" type="button">
+              <span data-icon="chat"></span
+              ><span data-i18n="openPanel">Open panel</span>
+            </button>
+          </div>
+          <p
+            class="demo-disclaimer"
+            id="demo-status"
+            role="status"
+            data-i18n="demoNote"
+          >
+            Website demo: EN / 中文. Desktop UI: Chinese. Nothing is captured or
+            sent.
+          </p>
+        </div>
+      </section>
+      <section
+        class="workflow section shell"
+        id="how-it-works"
+        aria-labelledby="how-heading"
+      >
+        <div class="section-index" aria-hidden="true">01</div>
+        <h2 id="how-heading" data-i18n="howHeading">
+          A shorter path to the conversation.
+        </h2>
+        <p class="section-intro" data-i18n="howIntro">
+          Keep your focus. Let the context come with you.
+        </p>
+        <div class="steps">
+          <article class="step">
+            <span class="step-number" aria-hidden="true">01</span>
+            <div class="step-visual select-visual" aria-hidden="true">
+              <div class="mini-toolbar">
+                ← &nbsp; → &nbsp; <span data-icon="folder"></span> Projects
+              </div>
+              <div class="mini-file">
+                <span data-icon="folder"></span><span>Research</span
+                ><span class="mini-pointer"
+                  ><span data-icon="pointer"></span
+                ></span>
+              </div>
+              <div class="mini-file faded">
+                <span data-icon="folder"></span> Design
+              </div>
+            </div>
+            <h3 data-i18n="stepOneTitle">Point to your target</h3>
+            <p data-i18n="stepOneBody">
+              Drag the floating button onto a window or folder. Or drop a single
+              local file onto it.
+            </p>
+          </article>
+          <article class="step">
+            <span class="step-number" aria-hidden="true">02</span>
+            <div class="step-visual task-visual" aria-hidden="true">
+              <div class="mini-title">Codex Pointer</div>
+              <div class="mini-segment">
+                <span data-i18n="newChat">New chat</span
+                ><span data-i18n="continueChat">Continue chat</span>
+              </div>
+              <div class="mini-text" data-i18n="miniTask">
+                Help me understand this folder.
+              </div>
+            </div>
+            <h3 data-i18n="stepTwoTitle">Say what you need</h3>
+            <p data-i18n="stepTwoBody">
+              Choose a new or linked chat. Write a task, or start with a
+              shortcut.
+            </p>
+          </article>
+          <article class="step">
+            <span class="step-number" aria-hidden="true">03</span>
+            <div class="step-visual chat-visual" aria-hidden="true">
+              <div class="mini-title">Codex</div>
+              <div class="mini-chat">
+                <span data-i18n="miniTask">Help me understand this folder.</span
+                ><code>D:/Projects/Research</code
+                ><span class="mini-send"><span data-icon="arrow"></span></span>
+              </div>
+            </div>
+            <h3 data-i18n="stepThreeTitle">Continue in Codex</h3>
+            <p data-i18n="stepThreeBody">
+              For a new chat, review and send the draft in Codex. For a linked
+              chat, submit explicitly in Pointer to queue the task.
+            </p>
+          </article>
+        </div>
+        <p class="keyboard-note">
+          <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd>
+          <span data-i18n="keyOpen">to open</span
+          ><span aria-hidden="true"> · </span><kbd>Esc</kbd>
+          <span data-i18n="keyCancel">to cancel</span>
+        </p>
+      </section>
+      <section
+        class="features section"
+        id="features"
+        aria-labelledby="features-heading"
+      >
+        <div class="shell">
+          <div class="section-index" aria-hidden="true">02</div>
+          <h2 id="features-heading" data-i18n="featureHeading">
+            Less setup. More momentum.
+          </h2>
+          <div class="feature-layout">
+            <div class="feature-demo">
+              <div class="feature-panel">
+                <div class="feature-panel-title">
+                  <span data-icon="pointer"></span>Codex Pointer<span
+                    class="fake-window-controls"
+                    aria-hidden="true"
+                    >− &nbsp; □ &nbsp; ×</span
+                  >
+                </div>
+                <div class="feature-panel-body">
+                  <label
+                    class="field-label"
+                    for="feature-context"
+                    data-i18n="targetContext"
+                    >Example target</label
+                  ><select id="feature-context">
+                    <option value="folder" data-i18n="sampleFolder">
+                      Folder · Research
+                    </option>
+                    <option value="file" data-i18n="sampleFile">
+                      File · Brief.md
+                    </option>
+                    <option value="window" data-i18n="sampleWindow">
+                      Window · Build output
+                    </option>
+                  </select>
+                  <div class="feature-chat-choice">
+                    <span data-i18n="newChat">New chat</span
+                    ><strong data-i18n="continueChat">Continue chat</strong>
+                  </div>
+                  <div class="remembered-chat">
+                    <span data-icon="chat"></span
+                    ><span data-i18n="researchChat">Research planning</span
+                    ><span class="remembered-caption" data-i18n="explicitLink"
+                      >Explicitly linked</span
+                    >
+                  </div>
+                  <div class="field-label-row">
+                    <label
+                      for="shortcut-task"
+                      class="field-label"
+                      data-i18n="editableTask"
+                      >Task · editable</label
+                    ><button
+                      type="button"
+                      class="clear-task"
+                      id="clear-task"
+                      data-i18n="clearTask"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <textarea
+                    id="shortcut-task"
+                    rows="3"
+                    data-i18n-placeholder="shortcutPlaceholder"
+                    placeholder="Choose a shortcut to start. Your draft stays editable."
+                  ></textarea>
+                  <div
+                    class="shortcut-buttons"
+                    id="shortcut-buttons"
+                    role="group"
+                    aria-label="Example task shortcuts"
+                    data-i18n-aria="shortcutLabel"
+                  ></div>
+                  <div class="file-drop-demo">
+                    <button type="button" class="example-file" id="try-file">
+                      <span data-icon="file"></span
+                      ><span>Brief.md</span></button
+                    ><span
+                      class="drop-arrow"
+                      data-icon="arrow"
+                      aria-hidden="true"
+                    ></span
+                    ><span class="drop-pointer" aria-hidden="true"
+                      ><span data-icon="pointer"></span
+                    ></span>
+                    <p data-i18n="tryFile">Try a single-file target</p>
+                  </div>
+                  <p
+                    class="shortcut-status"
+                    id="shortcut-status"
+                    role="status"
+                    data-i18n="shortcutsNote"
+                  >
+                    Shortcuts only fill a draft. They never send it.
+                  </p>
+                </div>
+              </div>
+              <p class="media-caption" data-i18n="featureDemoNote">
+                A real companion for your desktop. This website preview never
+                accesses your files.
+              </p>
+            </div>
+            <div class="feature-list">
+              <article>
+                <span class="feature-icon" data-icon="chat"></span>
+                <div>
+                  <h3 data-i18n="featureOneTitle">A chat for each context</h3>
+                  <p data-i18n="featureOneBody">
+                    Return to a folder or app and pick up the chat you
+                    explicitly linked.
+                  </p>
+                </div>
+              </article>
+              <article>
+                <span class="feature-icon" data-icon="tasks"></span>
+                <div>
+                  <h3 data-i18n="featureTwoTitle">Start with a useful task</h3>
+                  <p data-i18n="featureTwoBody">
+                    Context-aware shortcuts add a starting point. Your draft
+                    stays yours.
+                  </p>
+                </div>
+              </article>
+              <article>
+                <span class="feature-icon" data-icon="shield"></span>
+                <div>
+                  <h3 data-i18n="featureThreeTitle">Only what you choose</h3>
+                  <p data-i18n="featureThreeBody">
+                    Optional screenshots with a preview. No background screen or
+                    clipboard capture.
+                  </p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section
+        class="install section shell"
+        id="install"
+        aria-labelledby="install-heading"
+      >
+        <div class="install-summary">
+          <div class="section-index" aria-hidden="true">03</div>
+          <h2 id="install-heading" data-i18n="installHeading">
+            Make room for one small button.
+          </h2>
+          <p class="platform" data-i18n="platform">
+            Windows 10 / 11 · 64-bit preview
+          </p>
+          <p class="install-description" data-i18n="installBody">
+            Download the complete plugin package. The desktop helper is
+            included; no Python setup needed.
+          </p>
+          <a
+            class="button primary install-download"
+            data-link="download"
+            href="#install"
+            ><span data-i18n="downloadPackage">Download Windows package</span
+            ><span data-icon="arrow"></span></a
+          ><a class="text-link release-link" data-link="release" href="#install"
+            ><span data-i18n="releaseNotes">Release notes</span
+            ><span data-icon="up-right"></span
+          ></a>
+        </div>
+        <div class="install-instructions">
+          <ol>
+            <li>
+              <h3 data-i18n="installOneTitle">Download and unzip</h3>
+              <p data-i18n="installOneBody">
+                Keep the plugin folder and its bundled files together.
+              </p>
+            </li>
+            <li>
+              <h3 data-i18n="installTwoTitle">Install the local plugin</h3>
+              <p data-i18n="commandIntro">
+                In a terminal, open the unzipped codex-pointer folder and run:
+              </p>
+              <div class="command-block">
+                <pre id="install-commands"><code>codex plugin marketplace add .
+codex plugin add codex-pointer@codex-pointer-local</code></pre>
+                <button type="button" id="copy-commands" class="button quiet">
+                  <span data-icon="copy"></span
+                  ><span data-i18n="copy">Copy</span>
+                </button>
+              </div>
+              <span id="copy-status" role="status" class="copy-status"></span>
+            </li>
+            <li>
+              <h3 data-i18n="installThreeTitle">Open it from Codex</h3>
+              <p data-i18n="installThreeBody">
+                Reload Codex. Find Codex Pointer in Explore, then show the
+                button. Pin its entry if you like.
+              </p>
+            </li>
+          </ol>
+          <aside class="preview-boundaries">
+            <h3 data-i18n="boundariesTitle">Preview boundaries</h3>
+            <p data-i18n="boundariesBody">
+              New chats open as drafts for you to send. Existing chats keep
+              their own tools and permissions. Software actions depend on the
+              tools enabled in Codex.
+            </p>
+            <p data-i18n="requirements">
+              Requires Codex installed and signed in, with a supported Codex CLI
+              available. This is a Windows preview; some Explorer, display and
+              permission combinations still need testing.
+            </p>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer shell">
+      <div>
+        <a class="footer-brand" href="#">Codex Pointer</a>
+        <p data-i18n="independent">
+          Independent project. Not affiliated with OpenAI.
+        </p>
+      </div>
+      <nav aria-label="Project links" data-i18n-aria="footerNav">
+        <a class="text-link" data-link="repository" href="#install"
+          >GitHub <span data-icon="up-right"></span></a
+        ><a data-link="license" href="#install" data-i18n="license"
+          >MIT license</a
+        >
+        <div class="language-switch" role="group" aria-label="Language">
+          <button type="button" data-language="en" aria-pressed="true">
+            EN</button
+          ><span aria-hidden="true">/</span
+          ><button type="button" data-language="zh" aria-pressed="false">
+            中文
+          </button>
+        </div>
+      </nav>
+    </footer>
+  </body>
+</html>
