@@ -8,7 +8,7 @@ Drag the floating circle onto a target, or drop a file onto the circle. Choose a
 
 ![Codex Pointer native task panel](docs/preview-light.png)
 
-**v0.5.1 is a Windows preview.** This community project is not affiliated with OpenAI. Pointer selects context; the tools available in your Codex chat perform the work. It does not install a universal desktop-control engine.
+**v0.5.2 is a Windows preview.** This community project is not affiliated with OpenAI. Pointer selects context; the tools available in your Codex chat perform the work. It does not install a universal desktop-control engine.
 
 ## What it does
 
@@ -23,7 +23,7 @@ Drag the floating circle onto a target, or drop a file onto the circle. Choose a
 
 Requires **Windows 10/11 x64** and an installed, signed-in Codex desktop client with its native CLI. No separate Python installation is needed for the release ZIP.
 
-1. Download `codex-pointer-0.5.1-windows-x64.zip` from the [latest release](https://github.com/youisan/codex-pointer/releases/latest) and extract it. Keep the complete folder, including the GUI's `_internal` directory.
+1. Download `codex-pointer-0.5.2-windows-x64.zip` from the [latest release](https://github.com/youisan/codex-pointer/releases/latest) and extract it. Keep the complete folder, including the GUI's `_internal` directory.
 2. Open the extracted `codex-pointer` folder in Codex, or open a terminal in that folder and run:
 
    ```powershell
@@ -69,7 +69,7 @@ python scripts/verify_plugin_install.py --codex 'C:\path\to\native\codex.exe'
 python scripts/benchmark_switching.py
 ```
 
-Builds go to `dist/v0.5.1/`: the standalone GUI, MCP host, complete plugin ZIP, SHA256 checksums, and license notices. Source checkouts do not include binaries; build before installing the plugin from source.
+Builds go to `dist/v0.5.2/`: the standalone GUI, MCP host, complete plugin ZIP, SHA256 checksums, and license notices. Source checkouts do not include binaries; build before installing the plugin from source.
 
 Tests use synthetic contexts and owned/offscreen UI. Release verification installs the ZIP in an isolated Codex home to check real plugin discovery, relative executable paths, and global launcher metadata. It does not submit a model task or inspect your screen. The responsiveness benchmark simulates a 600ms lookup; it does not measure complete real-world Explorer latency.
 

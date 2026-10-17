@@ -73,6 +73,9 @@ class DroppedPathTests(unittest.TestCase):
 
 @unittest.skipUnless(sys.platform == "win32", "Production path helper requires Windows")
 class OwnedPathIntegrationTests(unittest.TestCase):
+    # These integration checks verify metadata correctness, not shared CI VM
+    # cold process startup time. Production keeps its 3 s budget; controlled
+    # timeout/cancellation tests exercise that behavior separately.
     def test_literal_file_folder_missing_and_reuse_in_production_powershell(self):
         # Brackets, quote and $() are literal filename characters. This would
         # fail if a path were interpolated into executable PowerShell source.
@@ -81,7 +84,7 @@ class OwnedPathIntegrationTests(unittest.TestCase):
             folder.mkdir()
             file = folder / "资料 $(throw 1).txt"
             file.write_bytes(b"Owned fixture content; production must only inspect metadata.")
-            with ExplorerWorker(windows._EXPLORER_WORKER_SCRIPT) as worker:
+            with ExplorerWorker(windows._EXPLORER_WORKER_SCRIPT, timeout=10.0) as worker:
                 first = worker.query_path(str(file))
                 process = worker._process
                 missing = worker.query_path(str(folder / "missing.txt"))
@@ -102,7 +105,7 @@ class OwnedPathIntegrationTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             file = Path(directory) / "test context 文.txt"
             file.write_bytes(b"fixture")
-            with ExplorerWorker(windows._EXPLORER_WORKER_SCRIPT) as worker, \
+            with ExplorerWorker(windows._EXPLORER_WORKER_SCRIPT, timeout=10.0) as worker, \
                     patch.object(windows, "_explorer_worker", worker), \
                     patch.object(windows, "_api", side_effect=AssertionError("No desktop access")):
                 target = windows.target_from_path(str(file))
@@ -121,7 +124,7 @@ function New-Object { throw 'File drops must not create desktop COM objects.' }
         with TemporaryDirectory() as directory:
             file = Path(directory) / "file [literal] 文.txt"
             file.write_bytes(b"owned fixture")
-            with ExplorerWorker(guard + windows._EXPLORER_WORKER_SCRIPT) as worker:
+            with ExplorerWorker(guard + windows._EXPLORER_WORKER_SCRIPT, timeout=10.0) as worker:
                 result = worker.query_path(str(file))
                 process = worker._process
                 folder = worker.query_path(directory)

@@ -4,7 +4,7 @@
 
 将一个小按钮拖到窗口或文件夹上，把目标上下文带进 Codex。
 
-**0.5.1 是 Windows 预览版。** 新增随对象变化的快捷任务，以及把单个文件或文件夹直接拖入圆圈。已有功能包括按对象记住对话、拖动目标预览和最近对象。客户端内的启动面板可以显示 / 隐藏浮动按钮。原生按钮和紧凑任务面板采用与 Codex 客户端协调的灰阶、字级和圆角，支持浅色 / 深色主题。桌面按钮负责识别目标、整理上下文；Codex 中已有的工具负责执行任务。此项目与 OpenAI 无隶属关系。
+**0.5.2 是 Windows 预览版。** 新增随对象变化的快捷任务，以及把单个文件或文件夹直接拖入圆圈。已有功能包括按对象记住对话、拖动目标预览和最近对象。客户端内的启动面板可以显示 / 隐藏浮动按钮。原生按钮和紧凑任务面板采用与 Codex 客户端协调的灰阶、字级和圆角，支持浅色 / 深色主题。桌面按钮负责识别目标、整理上下文；Codex 中已有的工具负责执行任务。此项目与 OpenAI 无隶属关系。
 
 | 浅色 | 深色 |
 | --- | --- |
@@ -101,9 +101,9 @@ python scripts/benchmark_switching.py
 
 产物：
 
-- `dist/v0.5.1/CodexPointer.exe`：独立悬浮按钮。
-- `dist/v0.5.1/CodexPointerHost.exe`：独立控制台 MCP 服务，不携带 Qt，可用 `--diagnose` 检查连接。
-- `dist/v0.5.1/codex-pointer-0.5.1-windows-x64.zip`：完整插件、便携 GUI、MCP Host、说明和许可证。便携 GUI 的 `_internal` 文件夹必须与 EXE 保持在一起。
+- `dist/v0.5.2/CodexPointer.exe`：独立悬浮按钮。
+- `dist/v0.5.2/CodexPointerHost.exe`：独立控制台 MCP 服务，不携带 Qt，可用 `--diagnose` 检查连接。
+- `dist/v0.5.2/codex-pointer-0.5.2-windows-x64.zip`：完整插件、便携 GUI、MCP Host、说明和许可证。便携 GUI 的 `_internal` 文件夹必须与 EXE 保持在一起。
 
 新旧版本独立输出，避免覆盖正在运行的程序。升级试用前，从旧按钮的右键菜单退出，再打开新版。
 
@@ -128,7 +128,7 @@ Qt / PySide 的第三方通知与许可证随产物一起分发。项目本身�
 
 ## 发布到 GitHub
 
-源码与安装包发布于 [GitHub](https://github.com/youisan/codex-pointer)。用 tag `v0.5.1` 建立 Release，并上传上述 ZIP、两个 EXE、第三方通知、许可证与 SHA256 校验信息。仓库包含 MIT 许可证；发布者可以在正式发布前调整项目名和许可选择。主页位于 [youisan.github.io/codex-pointer](https://youisan.github.io/codex-pointer/)，支持英中切换。
+源码与安装包发布于 [GitHub](https://github.com/youisan/codex-pointer)。用 tag `v0.5.2` 建立 Release，并上传上述 ZIP、两个 EXE、第三方通知、许可证与 SHA256 校验信息。仓库包含 MIT 许可证；发布者可以在正式发布前调整项目名和许可选择。主页位于 [youisan.github.io/codex-pointer](https://youisan.github.io/codex-pointer/)，支持英中切换。
 
 GitHub 开源分发与官方插件目录上架是两个流程。目前官方对本地 MCP 的公共目录提交有伙伴准入要求，参见[桌面插件提交说明](https://developers.openai.com/plugins/deploy/desktop-only)。
 
