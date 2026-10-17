@@ -90,9 +90,11 @@ class OwnedPathIntegrationTests(unittest.TestCase):
                 self.assertIsNone(process.poll())
             self.assertEqual(first["kind"], "file")
             self.assertEqual(first["source"], "file-drop")
-            self.assertEqual(first["path"], str(file))
+            # Windows runners can expose TEMP through its 8.3 alias while
+            # Get-Item returns the canonical long spelling of the same object.
+            self.assertTrue(Path(first["path"]).samefile(file))
             self.assertEqual(second["kind"], "folder")
-            self.assertEqual(second["path"], str(folder))
+            self.assertTrue(Path(second["path"]).samefile(folder))
             self.assertEqual(missing["error"], "path-unavailable")
             self.assertIsNone(missing["path"])
 
@@ -106,8 +108,28 @@ class OwnedPathIntegrationTests(unittest.TestCase):
                 target = windows.target_from_path(str(file))
             self.assertEqual(target.kind, "file")
             self.assertEqual(target.title, file.name)
-            self.assertEqual(target.path, str(file))
+            self.assertTrue(Path(target.path).samefile(file))
             self.assertEqual(target.source, "file-drop")
+
+    def test_file_path_queries_do_not_initialize_ui_automation_or_desktop_com(self):
+        # Fail on either expensive desktop initializer. The production script
+        # must still validate path metadata and keep its helper reusable.
+        guard = r'''
+function Add-Type { throw 'File drops must not load UI Automation assemblies.' }
+function New-Object { throw 'File drops must not create desktop COM objects.' }
+'''
+        with TemporaryDirectory() as directory:
+            file = Path(directory) / "file [literal] 文.txt"
+            file.write_bytes(b"owned fixture")
+            with ExplorerWorker(guard + windows._EXPLORER_WORKER_SCRIPT) as worker:
+                result = worker.query_path(str(file))
+                process = worker._process
+                folder = worker.query_path(directory)
+                self.assertIs(worker._process, process)
+            self.assertEqual(result["kind"], "file")
+            self.assertTrue(Path(result["path"]).samefile(file))
+            self.assertEqual(folder["kind"], "folder")
+            self.assertTrue(Path(folder["path"]).samefile(directory))
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "codex-pointer",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "In-client launcher, Windows floating target picker and local context reader for Codex",
   "license": "MIT",
   "extensions": {

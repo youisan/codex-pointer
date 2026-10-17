@@ -630,12 +630,17 @@ return $answer
 
 _EXPLORER_WORKER_SCRIPT = r"""
 $ErrorActionPreference = 'Stop'
-[Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false)
-[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName UIAutomationTypes
-Add-Type -AssemblyName WindowsBase
-$script:ExplorerShell = New-Object -ComObject Shell.Application
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$script:ExplorerInitialized = $false
+function Initialize-PointerExplorer {
+    if ($script:ExplorerInitialized) { return }
+    Add-Type -AssemblyName UIAutomationClient
+    Add-Type -AssemblyName UIAutomationTypes
+    Add-Type -AssemblyName WindowsBase
+    $script:ExplorerShell = New-Object -ComObject Shell.Application
+    $script:ExplorerInitialized = $true
+}
 """ + _UIA_POINT_LOOKUP_SCRIPT + r"""
 function Get-ExplorerTarget {
 """ + _EXPLORER_SCRIPT + r"""
@@ -652,6 +657,7 @@ while ($null -ne ($line = [Console]::ReadLine())) {
                     else { throw 'Unsupported object.' }
             $result = @{path=[string]$item.FullName;kind=$kind;source='file-drop';notes=@()}
         } else {
+            Initialize-PointerExplorer
             $arguments = @{ TargetHwnd = [long]$request.hwnd; Desktop = [bool]$request.desktop }
             if ($null -ne $request.point) {
                 $arguments.HasPoint = $true

@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 $taskRoot = $PSScriptRoot
-$taskExe = Join-Path $taskRoot 'dist\v0.5.0\CodexPointer.exe'
+$taskExe = Join-Path $taskRoot 'dist\v0.5.1\CodexPointer.exe'
 if (Test-Path -LiteralPath $taskExe) {
     Start-Process -FilePath $taskExe -WorkingDirectory $taskRoot -WindowStyle Hidden
 } else {

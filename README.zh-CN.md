@@ -4,7 +4,7 @@
 
 将一个小按钮拖到窗口或文件夹上，把目标上下文带进 Codex。
 
-**0.5.0 是 Windows 预览版。** 新增随对象变化的快捷任务，以及把单个文件或文件夹直接拖入圆圈。已有功能包括按对象记住对话、拖动目标预览和最近对象。客户端内的启动面板可以显示 / 隐藏浮动按钮。原生按钮和紧凑任务面板采用与 Codex 客户端协调的灰阶、字级和圆角，支持浅色 / 深色主题。桌面按钮负责识别目标、整理上下文；Codex 中已有的工具负责执行任务。此项目与 OpenAI 无隶属关系。
+**0.5.1 是 Windows 预览版。** 新增随对象变化的快捷任务，以及把单个文件或文件夹直接拖入圆圈。已有功能包括按对象记住对话、拖动目标预览和最近对象。客户端内的启动面板可以显示 / 隐藏浮动按钮。原生按钮和紧凑任务面板采用与 Codex 客户端协调的灰阶、字级和圆角，支持浅色 / 深色主题。桌面按钮负责识别目标、整理上下文；Codex 中已有的工具负责执行任务。此项目与 OpenAI 无隶属关系。
 
 | 浅色 | 深色 |
 | --- | --- |
@@ -14,7 +14,7 @@
 
 ## 使用体验
 
-1. 安装完整插件并刷新后，在 Codex 侧边栏的 **探索** 中找到 **Codex Pointer**。入口默认未固定，可用其菜单的 **固定到侧边栏**；然后打开面板，点击 **显示按钮**。也可以在聊天中说“打开 Codex Pointer”。独立启动仍可双击 `CodexPointer.exe` 或运行 `launch.ps1`。
+1. 安装完整插件并刷新后，在 Codex 侧边栏的 **探索** 中找到 **Codex Pointer**。入口默认未固定，可用其菜单的 **固定到侧边栏**；然后打开面板，点击 **显示按钮**。也可以在聊天中说“打开 Codex Pointer”。独立启动可运行包内 `plugins/codex-pointer/bin/CodexPointer.exe`；源码目录也可运行 `launch.ps1`。
 2. 拖动箭头到目标窗口或资源管理器中的文件夹上，会显示窗口描边和目标提示；停留后补全文件夹名称，松开选择，`Esc` 取消并恢复按钮位置。单击圆圈打开面板并使用最近聚焦的外部窗口，再次单击收起面板、保留未发送的内容；右键也可选择文件夹或最近对象。
 3. 填写任务，例如“解释这个报错”“整理这个文件夹中的资料”。截图默认关闭，可选择目标窗口或鼠标周边，并在发送前预览。
 4. 新对话点击 **在 Codex 中继续**，直接使用桌面预填入口。继续对话时先明确选择要绑定的聊天；再次回到同一文件夹或软件时恢复该选择。文件使用所在文件夹的绑定，子文件夹单独记忆；软件按完整程序路径记忆。新对象默认新对话，不继承上个对象的聊天。最近对象最多保留 8 个，窗口不会使用失效句柄重开。
@@ -101,9 +101,9 @@ python scripts/benchmark_switching.py
 
 产物：
 
-- `dist/v0.5.0/CodexPointer.exe`：独立悬浮按钮。
-- `dist/v0.5.0/CodexPointerHost.exe`：独立控制台 MCP 服务，不携带 Qt，可用 `--diagnose` 检查连接。
-- `dist/v0.5.0/codex-pointer-0.5.0-windows-x64.zip`：完整插件、便携 GUI、MCP Host、说明和许可证。便携 GUI 的 `_internal` 文件夹必须与 EXE 保持在一起。
+- `dist/v0.5.1/CodexPointer.exe`：独立悬浮按钮。
+- `dist/v0.5.1/CodexPointerHost.exe`：独立控制台 MCP 服务，不携带 Qt，可用 `--diagnose` 检查连接。
+- `dist/v0.5.1/codex-pointer-0.5.1-windows-x64.zip`：完整插件、便携 GUI、MCP Host、说明和许可证。便携 GUI 的 `_internal` 文件夹必须与 EXE 保持在一起。
 
 新旧版本独立输出，避免覆盖正在运行的程序。升级试用前，从旧按钮的右键菜单退出，再打开新版。
 
@@ -128,7 +128,7 @@ Qt / PySide 的第三方通知与许可证随产物一起分发。项目本身�
 
 ## 发布到 GitHub
 
-源码与安装包发布于 [GitHub](https://github.com/youisan/codex-pointer)。用 tag `v0.5.0` 建立 Release，并上传上述 ZIP、两个 EXE、第三方通知、许可证与 SHA256 校验信息。仓库包含 MIT 许可证；发布者可以在正式发布前调整项目名和许可选择。主页位于 [youisan.github.io/codex-pointer](https://youisan.github.io/codex-pointer/)，支持英中切换。
+源码与安装包发布于 [GitHub](https://github.com/youisan/codex-pointer)。用 tag `v0.5.1` 建立 Release，并上传上述 ZIP、两个 EXE、第三方通知、许可证与 SHA256 校验信息。仓库包含 MIT 许可证；发布者可以在正式发布前调整项目名和许可选择。主页位于 [youisan.github.io/codex-pointer](https://youisan.github.io/codex-pointer/)，支持英中切换。
 
 GitHub 开源分发与官方插件目录上架是两个流程。目前官方对本地 MCP 的公共目录提交有伙伴准入要求，参见[桌面插件提交说明](https://developers.openai.com/plugins/deploy/desktop-only)。
 
