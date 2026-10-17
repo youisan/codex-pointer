@@ -2,6 +2,6 @@
 window.POINTER_SITE_CONFIG = Object.freeze({
   owner: "youisan",
   repository: "codex-pointer",
-  version: "0.5.2",
-  windowsAsset: "codex-pointer-0.5.2-windows-x64.zip",
+  version: "0.6.0",
+  windowsAsset: "codex-pointer-0.6.0-windows-x64.zip",
 });
